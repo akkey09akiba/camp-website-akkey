@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <title>今日のポケモン</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background:
+        radial-gradient(ellipse at 30% 20%, rgba(80, 120, 220, 0.3) 0%, transparent 55%),
+        radial-gradient(ellipse at 70% 80%, rgba(140, 60, 200, 0.25) 0%, transparent 50%),
+        linear-gradient(160deg, #070d20 0%, #0d1535 50%, #130820 100%);
+      min-height: 100vh;
+      font-family: 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif;
+      color: #e8eaf6;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    /* 星 */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        radial-gradient(1px 1px at 10% 15%, rgba(255,255,255,0.8) 0%, transparent 100%),
+        radial-gradient(1px 1px at 30% 8%,  rgba(255,255,255,0.6) 0%, transparent 100%),
+        radial-gradient(1.5px 1.5px at 55% 20%, rgba(255,255,255,0.9) 0%, transparent 100%),
+        radial-gradient(1px 1px at 78% 12%, rgba(255,255,255,0.5) 0%, transparent 100%),
+        radial-gradient(1px 1px at 90% 35%, rgba(255,255,255,0.7) 0%, transparent 100%),
+        radial-gradient(1px 1px at 20% 55%, rgba(255,255,255,0.6) 0%, transparent 100%),
+        radial-gradient(1.5px 1.5px at 65% 60%, rgba(255,255,255,0.8) 0%, transparent 100%),
+        radial-gradient(1px 1px at 45% 80%, rgba(255,255,255,0.5) 0%, transparent 100%),
+        radial-gradient(1px 1px at 85% 75%, rgba(200,200,255,0.7) 0%, transparent 100%),
+        radial-gradient(1px 1px at 5%  90%, rgba(255,255,255,0.6) 0%, transparent 100%);
+    }
+
+    /* ヘッダー */
+    header {
+      position: fixed;
+      top: 0;
+      width: 100%;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: linear-gradient(to bottom, rgba(6,11,24,0.95), transparent);
+      z-index: 10;
+    }
+
+    header .logo {
+      font-size: 0.85rem;
+      letter-spacing: 0.15em;
+      color: #a5c4f3;
+    }
+
+    header a {
+      color: #c5d8f5;
+      text-decoration: none;
+      font-size: 0.85rem;
+      letter-spacing: 0.1em;
+      transition: color 0.2s;
+    }
+
+    header a:hover { color: #fff; }
+
+    /* カード */
+    .card {
+      position: relative;
+      z-index: 1;
+      background: rgba(255, 255, 255, 0.06);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 24px;
+      padding: 3rem 2.5rem;
+      width: min(360px, 90vw);
+      text-align: center;
+      box-shadow: 0 8px 40px rgba(0, 0, 0, 0.4);
+    }
+
+    .eyecatch {
+      font-size: 0.72rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: #7baee8;
+      margin-bottom: 0.5rem;
+    }
+
+    h1 {
+      font-size: 1.6rem;
+      font-weight: bold;
+      letter-spacing: 0.1em;
+      background: linear-gradient(135deg, #e8f4ff 0%, #a8d4ff 40%, #c8a8ff 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 2rem;
+    }
+
+    #pokemonImage {
+      width: 160px;
+      height: 160px;
+      image-rendering: pixelated;
+      filter: drop-shadow(0 0 20px rgba(160, 200, 255, 0.4));
+    }
+
+    #pokemonName {
+      font-size: 1.8rem;
+      font-weight: bold;
+      letter-spacing: 0.1em;
+      color: #d0e8ff;
+      margin-top: 1rem;
+      min-height: 2.2rem;
+    }
+
+    .back-link {
+      margin-top: 2rem;
+      display: inline-block;
+      font-size: 0.8rem;
+      color: #5588a0;
+      text-decoration: none;
+      letter-spacing: 0.1em;
+      border-bottom: 1px solid rgba(100, 150, 200, 0.3);
+      transition: color 0.2s;
+    }
+
+    .back-link:hover { color: #a8d4ff; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <span class="logo">今日のポケモン</span>
+    <a href="index.html">← トップへ</a>
+  </header>
+
+  <div class="card">
+    <p class="eyecatch">Today's Pokémon</p>
+    <h1>今日のポケモン</h1>
+    <img id="pokemonImage" src="" alt="">
+    <p id="pokemonName"></p>
+    <a class="back-link" href="index.html">トップページへ戻る</a>
+  </div>
+
+<script>
+  let pokemonName = document.getElementById('pokemonName');
+  let pokemonImage = document.getElementById('pokemonImage');
+
+  // ポケモンは現在898種
+  let pokemonNumber = Math.floor(Math.random() * 898) + 1;
+
+  fetch(`https://pokeapi.co/api/v2/pokemon/${pokemonNumber}`)
+    .then(function(response) {
+      return response.json();
+    })
+    .then(function(data) {
+      pokemonImage.src = data.sprites.front_default;
+      return fetch(`https://pokeapi.co/api/v2/pokemon-species/${pokemonNumber}`);
+    })
+    .then(function(response) {
+      return response.json();
+    })
+    .then(function(speciesData) {
+      // names配列から日本語名を探す（カタカナ → 漢字まじり → 英語の順で優先）
+      let jaName = speciesData.names.find(function(n) { return n.language.name === 'ja-hrkt'; })
+                || speciesData.names.find(function(n) { return n.language.name === 'ja'; })
+                || speciesData.names.find(function(n) { return n.language.name === 'en'; });
+      pokemonName.textContent = jaName.name;
+    })
+    .catch(function(error) {
+      console.error(`エラーが発生しました:${error}`);
+    });
+</script>
+
+</body>
+</html>
