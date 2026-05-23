@@ -292,5 +292,90 @@
   guessReset.addEventListener('click', resetGame);
 </script>
 
+  <canvas id="glitterCanvas" style="position:fixed;inset:0;pointer-events:none;z-index:50;"></canvas>
+
+<script>
+  (function() {
+    const glCanvas = document.getElementById('glitterCanvas');
+    const glCtx = glCanvas.getContext('2d');
+
+    function resize() {
+      glCanvas.width  = window.innerWidth;
+      glCanvas.height = window.innerHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    const PARTICLE_COUNT = 120;
+    const particles = [];
+    const colors = [
+      'rgba(255,255,255,', 'rgba(200,220,255,',
+      'rgba(180,200,255,', 'rgba(220,180,255,', 'rgba(160,230,255,',
+    ];
+
+    function randomParticle(p) {
+      p.x      = Math.random() * glCanvas.width;
+      p.y      = Math.random() * glCanvas.height;
+      p.size   = Math.random() * 1.8 + 0.4;
+      p.color  = colors[Math.floor(Math.random() * colors.length)];
+      p.alpha  = 0;
+      p.target = Math.random() * 0.8 + 0.2;
+      p.speed  = Math.random() * 0.015 + 0.005;
+      p.phase  = Math.random() < 0.5 ? 'in' : 'out';
+      p.drift  = (Math.random() - 0.5) * 0.3;
+    }
+
+    for (let i = 0; i < PARTICLE_COUNT; i++) {
+      const p = {};
+      randomParticle(p);
+      p.alpha = Math.random();
+      particles.push(p);
+    }
+
+    function drawStar(x, y, size, alpha, color) {
+      glCtx.save();
+      glCtx.translate(x, y);
+      glCtx.globalAlpha = alpha;
+      const gradient = glCtx.createRadialGradient(0, 0, 0, 0, 0, size * 4);
+      gradient.addColorStop(0, color + '1)');
+      gradient.addColorStop(0.3, color + (alpha * 0.6).toFixed(2) + ')');
+      gradient.addColorStop(1, color + '0)');
+      for (let angle of [0, Math.PI / 2]) {
+        glCtx.save();
+        glCtx.rotate(angle);
+        glCtx.beginPath();
+        glCtx.moveTo(-size * 4, 0);
+        glCtx.lineTo(size * 4, 0);
+        glCtx.strokeStyle = color + (alpha * 0.4).toFixed(2) + ')';
+        glCtx.lineWidth = size * 0.6;
+        glCtx.stroke();
+        glCtx.restore();
+      }
+      glCtx.beginPath();
+      glCtx.arc(0, 0, size, 0, Math.PI * 2);
+      glCtx.fillStyle = gradient;
+      glCtx.fill();
+      glCtx.restore();
+    }
+
+    function animate() {
+      glCtx.clearRect(0, 0, glCanvas.width, glCanvas.height);
+      for (const p of particles) {
+        if (p.phase === 'in') {
+          p.alpha += p.speed;
+          if (p.alpha >= p.target) p.phase = 'out';
+        } else {
+          p.alpha -= p.speed;
+          if (p.alpha <= 0) randomParticle(p);
+        }
+        p.x += p.drift;
+        drawStar(p.x, p.y, p.size, Math.max(0, p.alpha), p.color);
+      }
+      requestAnimationFrame(animate);
+    }
+    animate();
+  })();
+</script>
+
 </body>
 </html>

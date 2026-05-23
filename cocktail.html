@@ -4,6 +4,7 @@
   <title>今日のカクテル</title>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&display=swap" rel="stylesheet">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -127,9 +128,11 @@
 
     /* カクテル名 */
     #cocktailName {
-      font-size: 1.8rem;
-      font-weight: bold;
-      letter-spacing: 0.08em;
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 2rem;
+      font-weight: 700;
+      font-style: italic;
+      letter-spacing: 0.02em;
       background: linear-gradient(135deg, #e8f4ff 0%, #a8d4ff 40%, #c8a8ff 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
@@ -137,13 +140,14 @@
       margin-top: 1.2rem;
       margin-bottom: 0;
       min-height: 2rem;
+      line-height: 1.3;
     }
 
     #cocktailNameEn {
-      font-size: 0.78rem;
-      color: #4a6a88;
-      letter-spacing: 0.08em;
-      margin-top: 0.2rem;
+      font-size: 0.8rem;
+      color: #5a7a9a;
+      letter-spacing: 0.1em;
+      margin-top: 0.3rem;
     }
 
     #abvBadge {
@@ -323,6 +327,7 @@
     cocktailImage.src = '';
     cocktailName.textContent = '読み込み中...';
     cocktailNameEn.textContent = '';
+    cocktailName.className = '';
     badgeRow.innerHTML = '';
     abvBadge.style.display = 'none';
     ingredientList.innerHTML = '';
@@ -344,8 +349,9 @@
         };
         img.src = d.strDrinkThumb;
 
-        // 英語名を小さく表示
-        cocktailNameEn.textContent = d.strDrink;
+        // 英語名をメインタイトルに表示
+        cocktailName.textContent = d.strDrink;
+        cocktailName.className = 'fade-in';
 
         // バッジ
         if (d.strCategory) badgeRow.appendChild(makeBadge(d.strCategory, 'category'));
@@ -369,7 +375,7 @@
           measures.push(measure ? measure.trim() : '');
         }
 
-        // カクテル名・材料・レシピをまとめて翻訳（| 区切りで1リクエスト）
+        // 材料・レシピをまとめて翻訳（| 区切りで1リクエスト）
         let nameAndIngredients = [d.strDrink].concat(ingredients).join(' | ');
 
         return Promise.all([
@@ -380,9 +386,8 @@
           let jaName     = translated[0] || d.strDrink;
           let jaIngredients = translated.slice(1);
 
-          // カクテル名（日本語）
-          cocktailName.textContent = jaName;
-          cocktailName.className = 'fade-in';
+          // 日本語訳をサブタイトルに表示
+          cocktailNameEn.textContent = jaName;
 
           // 材料リスト
           ingredients.forEach(function(name, idx) {
@@ -405,6 +410,91 @@
 
   nextButton.addEventListener('click', loadCocktail);
   loadCocktail();
+</script>
+
+  <canvas id="glitterCanvas" style="position:fixed;inset:0;pointer-events:none;z-index:50;"></canvas>
+
+<script>
+  (function() {
+    const glCanvas = document.getElementById('glitterCanvas');
+    const glCtx = glCanvas.getContext('2d');
+
+    function resize() {
+      glCanvas.width  = window.innerWidth;
+      glCanvas.height = window.innerHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    const PARTICLE_COUNT = 120;
+    const particles = [];
+    const colors = [
+      'rgba(255,255,255,', 'rgba(200,220,255,',
+      'rgba(180,200,255,', 'rgba(220,180,255,', 'rgba(160,230,255,',
+    ];
+
+    function randomParticle(p) {
+      p.x      = Math.random() * glCanvas.width;
+      p.y      = Math.random() * glCanvas.height;
+      p.size   = Math.random() * 1.8 + 0.4;
+      p.color  = colors[Math.floor(Math.random() * colors.length)];
+      p.alpha  = 0;
+      p.target = Math.random() * 0.8 + 0.2;
+      p.speed  = Math.random() * 0.015 + 0.005;
+      p.phase  = Math.random() < 0.5 ? 'in' : 'out';
+      p.drift  = (Math.random() - 0.5) * 0.3;
+    }
+
+    for (let i = 0; i < PARTICLE_COUNT; i++) {
+      const p = {};
+      randomParticle(p);
+      p.alpha = Math.random();
+      particles.push(p);
+    }
+
+    function drawStar(x, y, size, alpha, color) {
+      glCtx.save();
+      glCtx.translate(x, y);
+      glCtx.globalAlpha = alpha;
+      const gradient = glCtx.createRadialGradient(0, 0, 0, 0, 0, size * 4);
+      gradient.addColorStop(0, color + '1)');
+      gradient.addColorStop(0.3, color + (alpha * 0.6).toFixed(2) + ')');
+      gradient.addColorStop(1, color + '0)');
+      for (let angle of [0, Math.PI / 2]) {
+        glCtx.save();
+        glCtx.rotate(angle);
+        glCtx.beginPath();
+        glCtx.moveTo(-size * 4, 0);
+        glCtx.lineTo(size * 4, 0);
+        glCtx.strokeStyle = color + (alpha * 0.4).toFixed(2) + ')';
+        glCtx.lineWidth = size * 0.6;
+        glCtx.stroke();
+        glCtx.restore();
+      }
+      glCtx.beginPath();
+      glCtx.arc(0, 0, size, 0, Math.PI * 2);
+      glCtx.fillStyle = gradient;
+      glCtx.fill();
+      glCtx.restore();
+    }
+
+    function animate() {
+      glCtx.clearRect(0, 0, glCanvas.width, glCanvas.height);
+      for (const p of particles) {
+        if (p.phase === 'in') {
+          p.alpha += p.speed;
+          if (p.alpha >= p.target) p.phase = 'out';
+        } else {
+          p.alpha -= p.speed;
+          if (p.alpha <= 0) randomParticle(p);
+        }
+        p.x += p.drift;
+        drawStar(p.x, p.y, p.size, Math.max(0, p.alpha), p.color);
+      }
+      requestAnimationFrame(animate);
+    }
+    animate();
+  })();
 </script>
 
 </body>

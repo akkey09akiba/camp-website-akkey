@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <title>p5.js</title>
+  <style>
+    body {
+      margin: 0; /* 余白を完全に削除 */
+    }
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/p5@1.11.1/lib/p5.min.js"></script>
+</head>
+<body>
+
+<script>
+    let particles = [];
+
+function setup() {
+  createCanvas(windowWidth, windowHeight); // ウィンドウ全体をキャンバスに
+  background(0);
+}
+
+function draw() {
+  background(0, 50); // 残像効果
+
+  // 粒子を更新・描画
+  for (let i = particles.length - 1; i >= 0; i--) {
+    let p = particles[i];
+    fill(...p.color, p.alpha);
+    noStroke();
+    ellipse(p.x, p.y, 6);
+    p.x += p.vx;
+    p.y += p.vy;
+    p.vx *= 0.98; // 摩擦
+    p.vy = p.vy * 0.98 + 0.1; // 重力
+    p.alpha -= 5; // 透明度減少
+    if (p.alpha <= 0) particles.splice(i, 1);
+  }
+
+  // 定期的に花火を生成
+  if (frameCount % 60 === 0) {
+    let x = random(width), y = random(height / 2);
+    for (let i = 0; i < 100; i++) {
+      let angle = random(TWO_PI);
+      let velocity = random(2, 6);
+      particles.push({
+        x: x,
+        y: y,
+        vx: cos(angle) * velocity,
+        vy: sin(angle) * velocity,
+        alpha: 255,
+        color: [random(255), random(255), random(255)],
+      });
+    }
+  }
+}
+function setup() {
+  createCanvas(windowWidth, windowHeight); // ウィンドウ全体をキャンバスに
+  background(0);
+  fill(255, 255, 0); // 星の色を黄色に設定
+  noStroke();
+  drawStar(width / 2, height / 2, 100); // 中央に五芒星を描画
+}
+
+function drawStar(x, y, size) {
+  let angle = PI / 2; // 開始角度
+  let step = TWO_PI / 5; // 1/5円の角度
+
+  beginShape();
+  // 外側と内側の頂点を個別に計算
+  vertex(x + cos(angle) * size, y - sin(angle) * size);
+  vertex(x + cos(angle + step / 2) * (size / 2), y - sin(angle + step / 2) * (size / 2));
+  vertex(x + cos(angle + step) * size, y - sin(angle + step) * size);
+  vertex(x + cos(angle + step * 1.5) * (size / 2), y - sin(angle + step * 1.5) * (size / 2));
+  vertex(x + cos(angle + step * 2) * size, y - sin(angle + step * 2) * size);
+  vertex(x + cos(angle + step * 2.5) * (size / 2), y - sin(angle + step * 2.5) * (size / 2));
+  vertex(x + cos(angle + step * 3) * size, y - sin(angle + step * 3) * size);
+  vertex(x + cos(angle + step * 3.5) * (size / 2), y - sin(angle + step * 3.5) * (size / 2));
+  vertex(x + cos(angle + step * 4) * size, y - sin(angle + step * 4) * size);
+  vertex(x + cos(angle + step * 4.5) * (size / 2), y - sin(angle + step * 4.5) * (size / 2));
+  endShape(CLOSE);
+}
+</script>
+
+</body>
+</html>

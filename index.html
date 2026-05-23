@@ -4,6 +4,7 @@
   <title>星空の彼方へ - 劇場アニメ公式サイト</title>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@300;400&display=swap" rel="stylesheet">
   <style>
     * {
       margin: 0;
@@ -37,6 +38,14 @@
       color: #a5c4f3;
     }
 
+    header nav {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      align-items: center;
+      gap: 0;
+    }
+
     header nav a {
       color: #c5d8f5;
       text-decoration: none;
@@ -48,6 +57,95 @@
 
     header nav a:hover {
       color: #fff;
+    }
+
+    .nav-divider {
+      width: 100%;
+      height: 0;
+      margin: 0.25rem 0 0;
+    }
+
+    /* 別ページリンクは一回り小さく */
+    .nav-divider ~ a {
+      font-size: 0.75rem;
+      color: #7aaac8;
+      margin-left: 1.4rem;
+    }
+
+    .nav-divider ~ a:hover { color: #c5d8f5; }
+
+    /* ハンバーガーボタン */
+    .hamburger {
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      gap: 5px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 4px;
+      z-index: 200;
+    }
+
+    .hamburger span {
+      display: block;
+      width: 22px;
+      height: 2px;
+      background: #c5d8f5;
+      border-radius: 2px;
+      transition: transform 0.3s, opacity 0.3s;
+    }
+
+    .hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    .hamburger.open span:nth-child(2) { opacity: 0; }
+    .hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+    /* モバイルオーバーレイ */
+    .nav-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 140;
+    }
+    .nav-overlay.open { display: block; }
+
+    @media (max-width: 768px) {
+      .hamburger { display: flex; }
+
+      .nav-divider {
+        display: block;
+        width: 100%;
+        height: 1px;
+        background: rgba(100, 150, 220, 0.2);
+        margin: 0.2rem 0;
+      }
+
+      header nav {
+        display: none;
+        position: fixed;
+        top: 0;
+        right: 0;
+        width: 220px;
+        height: 100vh;
+        background: rgba(6, 11, 24, 0.97);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border-left: 1px solid rgba(100, 150, 220, 0.15);
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 5rem 2rem 2rem;
+        gap: 0.2rem;
+        z-index: 150;
+      }
+
+      header nav.open { display: flex; }
+
+      header nav a {
+        margin-left: 0;
+        font-size: 0.95rem;
+        padding: 0.5rem 0;
+        width: 100%;
+      }
     }
 
     /* ヒーローバナー */
@@ -93,9 +191,10 @@
     }
 
     .hero-title {
+      font-family: 'Shippori Mincho', 'Hiragino Mincho ProN', '游明朝', serif;
       font-size: clamp(3rem, 8vw, 6rem);
-      font-weight: bold;
-      letter-spacing: 0.15em;
+      font-weight: 300;
+      letter-spacing: 0.25em;
       background: linear-gradient(135deg, #e8f4ff 0%, #a8d4ff 40%, #c8a8ff 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
@@ -132,6 +231,48 @@
     @keyframes pulse {
       0%, 100% { opacity: 0.4; }
       50% { opacity: 1; }
+    }
+
+    @keyframes heroFadeUp {
+      from { opacity: 0; transform: translateY(28px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes haloPulse {
+      0%, 100% { opacity: 0.7; transform: translate(-50%, -50%) scale(1); }
+      50%       { opacity: 1;   transform: translate(-50%, -50%) scale(1.12); }
+    }
+
+    #heroCanvas {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .hero-title-halo {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 640px;
+      max-width: 90vw;
+      height: 240px;
+      background: radial-gradient(ellipse at center,
+        rgba(100, 150, 255, 0.13) 0%,
+        rgba(140, 80, 255, 0.07) 45%,
+        transparent 70%);
+      pointer-events: none;
+      animation: haloPulse 5s ease-in-out infinite;
+      z-index: 1;
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
 
     /* セクション共通 */
@@ -183,6 +324,44 @@
       height: 100%;
     }
 
+    /* ニュース */
+    .news-list {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .news-item {
+      display: flex;
+      align-items: baseline;
+      gap: 1.4rem;
+      padding: 0.9rem 0;
+      border-bottom: 1px solid rgba(100, 150, 220, 0.12);
+    }
+
+    .news-date {
+      flex-shrink: 0;
+      font-size: 0.75rem;
+      color: #5a8ab8;
+      letter-spacing: 0.08em;
+    }
+
+    .news-tag {
+      flex-shrink: 0;
+      font-size: 0.68rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      padding: 0.15rem 0.6rem;
+      border-radius: 20px;
+      border: 1px solid rgba(160, 200, 255, 0.3);
+      color: #a8d4ff;
+    }
+
+    .news-text {
+      font-size: 0.88rem;
+      color: #b0c8e8;
+      line-height: 1.7;
+    }
+
     /* あらすじ */
     #story p {
       color: #b0c8e8;
@@ -214,11 +393,16 @@
       width: 100%;
       aspect-ratio: 3/4;
       background: linear-gradient(160deg, #1a2a50, #2a1a50);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 4rem;
-      color: rgba(160, 200, 255, 0.3);
+      overflow: hidden;
+    }
+
+    .character-img img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: top center;
+      display: block;
+      filter: brightness(0.9);
     }
 
     .character-info {
@@ -244,6 +428,40 @@
       line-height: 1.7;
     }
 
+    /* 空の裂け目 */
+    #rift-section {
+      position: relative;
+      width: 100%;
+      height: 420px;
+      margin-top: 6rem;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+    }
+
+    #riftCanvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    .rift-text {
+      position: relative;
+      z-index: 2;
+      padding-right: 8%;
+      text-align: right;
+    }
+
+    .rift-label {
+      font-family: 'Shippori Mincho', 'Hiragino Mincho ProN', serif;
+      font-size: clamp(1rem, 2.5vw, 1.4rem);
+      font-weight: 300;
+      letter-spacing: 0.25em;
+      color: rgba(180, 220, 255, 0.7);
+    }
+
     /* フッター */
     footer {
       text-align: center;
@@ -257,21 +475,38 @@
 </head>
 <body>
 
+  <div class="nav-overlay" id="navOverlay"></div>
+
   <header>
     <div class="logo">星空の彼方へ</div>
-    <nav>
+    <nav id="globalNav">
       <a href="#trailer">予告</a>
+      <a href="#news">ニュース</a>
       <a href="#story">あらすじ</a>
       <a href="#characters">キャラクター</a>
+      <a href="#comment">監督コメント</a>
+      <a href="#cast">キャスト</a>
+      <span class="nav-divider"></span>
+      <a href="pokemon.html">今日のポケモン</a>
+      <a href="guessGame.html">数当てゲーム</a>
+      <a href="pokemongame.html">ポケモン名前当て</a>
+      <a href="cocktail.html">今日のカクテル</a>
     </nav>
+    <button class="hamburger" id="hamburger" aria-label="メニュー">
+      <span></span><span></span><span></span>
+    </button>
   </header>
 
   <!-- ヒーローバナー -->
   <div id="hero">
-    <p class="hero-eyecatch">劇場アニメーション</p>
-    <h1 class="hero-title">星空の彼方へ</h1>
-    <p class="hero-subtitle">― すべての光は、誰かへの言葉だった ―</p>
-    <p class="hero-release">2026年 夏　全国公開</p>
+    <canvas id="heroCanvas"></canvas>
+    <div class="hero-title-halo"></div>
+    <div class="hero-content">
+      <p class="hero-eyecatch"  style="animation: heroFadeUp 0.9s 0.2s ease-out both;">劇場アニメーション</p>
+      <h1 class="hero-title"   style="animation: heroFadeUp 1.0s 0.5s ease-out both;">星空の彼方へ</h1>
+      <p class="hero-subtitle" style="animation: heroFadeUp 0.9s 1.0s ease-out both;">― すべての光は、誰かへの言葉だった ―</p>
+      <p class="hero-release"  style="animation: heroFadeUp 0.9s 1.4s ease-out both;">2026年 夏　全国公開</p>
+    </div>
     <p class="scroll-hint">▼ SCROLL</p>
   </div>
 
@@ -283,15 +518,55 @@
       <div class="video-wrapper">
         <!-- YouTubeのURLをここに貼り替えてください -->
         <iframe
-          src="https://www.youtube.com/embed/dQw4w9WgXcQ"
-          title="予告動画"
+          src="https://www.youtube.com/embed/0BZOl07czVI?si=5UEm57C1gHG8PU13"
+          title="YouTube video player"
           frameborder="0"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+          referrerpolicy="strict-origin-when-cross-origin"
           allowfullscreen>
         </iframe>
       </div>
     </section>
   </div>
+
+  <!-- ニュース -->
+  <section id="news">
+    <p class="section-label">News</p>
+    <h2 class="section-title">ニュース</h2>
+    <div class="news-list">
+
+      <div class="news-item">
+        <span class="news-date">2026.05.20</span>
+        <span class="news-tag">解禁</span>
+        <p class="news-text">本予告映像を公開。主題歌「光の果てへ」（蒼月ハル）のフルサイズ試聴も同時解禁。</p>
+      </div>
+
+      <div class="news-item">
+        <span class="news-date">2026.04.15</span>
+        <span class="news-tag">情報解禁</span>
+        <p class="news-text">キャスト第2弾を発表。ミラ役に桐原夜子、宵役に藍沢律が決定。</p>
+      </div>
+
+      <div class="news-item">
+        <span class="news-date">2026.03.28</span>
+        <span class="news-tag">イベント</span>
+        <p class="news-text">AnimeJapan 2026にてスペシャルステージを開催。監督・メインキャスト3名が登壇し、制作秘話を披露。</p>
+      </div>
+
+      <div class="news-item">
+        <span class="news-date">2026.02.14</span>
+        <span class="news-tag">情報解禁</span>
+        <p class="news-text">ティザービジュアル＆特報映像を公開。公開時期「2026年 夏」を正式発表。</p>
+      </div>
+
+      <div class="news-item">
+        <span class="news-date">2026.01.07</span>
+        <span class="news-tag">情報解禁</span>
+        <p class="news-text">劇場アニメーション「星空の彼方へ」制作決定。監督・瀬川燈、脚本・雨宮糸による完全新作オリジナル作品。</p>
+      </div>
+
+    </div>
+  </section>
 
   <!-- あらすじ -->
   <section id="story">
@@ -316,7 +591,7 @@
     <div class="character-grid">
 
       <div class="character-card">
-        <div class="character-img">✦</div>
+        <div class="character-img"><img src="silhouette/05.png" alt="碧（アオ）"></div>
         <div class="character-info">
           <p class="character-name-ja">碧（アオ）</p>
           <p class="character-name-en">Ao</p>
@@ -325,7 +600,7 @@
       </div>
 
       <div class="character-card">
-        <div class="character-img">★</div>
+        <div class="character-img"><img src="silhouette/07.png" alt="塁（ルイ）"></div>
         <div class="character-info">
           <p class="character-name-ja">塁（ルイ）</p>
           <p class="character-name-en">Rui</p>
@@ -334,7 +609,7 @@
       </div>
 
       <div class="character-card">
-        <div class="character-img">☽</div>
+        <div class="character-img"><img src="silhouette/04.png" alt="蒼磨（ソウマ）"></div>
         <div class="character-info">
           <p class="character-name-ja">蒼磨（ソウマ）</p>
           <p class="character-name-en">Soma</p>
@@ -343,7 +618,7 @@
       </div>
 
       <div class="character-card">
-        <div class="character-img">◈</div>
+        <div class="character-img"><img src="silhouette/09.png" alt="ミラ"></div>
         <div class="character-info">
           <p class="character-name-ja">ミラ</p>
           <p class="character-name-en">Mira</p>
@@ -351,20 +626,383 @@
         </div>
       </div>
 
+      <div class="character-card">
+        <div class="character-img"><img src="silhouette/01.png" alt="凛（リン）"></div>
+        <div class="character-info">
+          <p class="character-name-ja">凛（リン）</p>
+          <p class="character-name-en">Rin</p>
+          <p class="character-desc">アオの幼なじみ。明るくおせっかいな17歳。霧が広がった日も「いつか必ず晴れる」と信じている。</p>
+        </div>
+      </div>
+
+      <div class="character-card">
+        <div class="character-img"><img src="silhouette/08.png" alt="宵（ヨイ）"></div>
+        <div class="character-info">
+          <p class="character-name-ja">宵（ヨイ）</p>
+          <p class="character-name-en">Yoi</p>
+          <p class="character-desc">霧の街の地下バーを切り盛りする謎の青年。どんな酒も作れると言われ、夜な夜な訳ありの客が集まる。光の霧が広がる前の星空を知る、数少ない大人のひとり。</p>
+        </div>
+      </div>
+
     </div>
   </section>
+
+  <!-- 監督コメント -->
+  <section id="comment">
+    <p class="section-label">Director's Message</p>
+    <h2 class="section-title">監督コメント</h2>
+    <div style="display:flex; gap:2rem; align-items:flex-start; flex-wrap:wrap;">
+      <div style="flex-shrink:0; text-align:center;">
+        <div style="width:90px; height:90px; border-radius:50%; background:linear-gradient(160deg,#1a2a50,#2a1a50); border:1px solid rgba(100,150,220,0.25); display:flex; align-items:center; justify-content:center; font-size:2.2rem; color:rgba(160,200,255,0.35); margin:0 auto;">✦</div>
+        <p style="margin-top:0.6rem; font-size:0.75rem; color:#5a8ab8; letter-spacing:0.1em;">監督</p>
+        <p style="font-size:0.88rem; color:#c0d8f0; letter-spacing:0.05em;">瀬川 燈</p>
+      </div>
+      <blockquote style="flex:1; min-width:200px; border-left:2px solid rgba(160,200,255,0.25); padding-left:1.4rem; color:#a0bcd8; font-size:0.92rem; line-height:2.1;">
+        「星が見えない、ということは、何も感じなくなるということじゃないと思うんです。むしろ、見えないからこそ、あの光がどこかにあると信じ続ける力が生まれる。アオとルイが旅をする中で描きたかったのは、そういう"信じることの重さ"です。<br>
+        この映画を観終わったあと、夜空を見上げたくなってもらえたら、それだけで十分です。」
+      </blockquote>
+    </div>
+  </section>
+
+  <!-- キャストクレジット -->
+  <section id="cast">
+    <p class="section-label">Cast</p>
+    <h2 class="section-title">キャスト</h2>
+    <div style="display:flex; flex-direction:column;">
+
+      <div style="display:flex; align-items:baseline; gap:1rem; padding:0.75rem 0; border-bottom:1px solid rgba(100,150,220,0.12);">
+        <span style="flex-shrink:0; width:9rem; font-size:0.82rem; color:#5a8ab8; letter-spacing:0.08em;">碧（アオ）</span>
+        <span style="font-size:0.95rem; color:#c0d8f0; letter-spacing:0.05em;">白瀬 空音</span>
+      </div>
+      <div style="display:flex; align-items:baseline; gap:1rem; padding:0.75rem 0; border-bottom:1px solid rgba(100,150,220,0.12);">
+        <span style="flex-shrink:0; width:9rem; font-size:0.82rem; color:#5a8ab8; letter-spacing:0.08em;">塁（ルイ）</span>
+        <span style="font-size:0.95rem; color:#c0d8f0; letter-spacing:0.05em;">朝倉 凪</span>
+      </div>
+      <div style="display:flex; align-items:baseline; gap:1rem; padding:0.75rem 0; border-bottom:1px solid rgba(100,150,220,0.12);">
+        <span style="flex-shrink:0; width:9rem; font-size:0.82rem; color:#5a8ab8; letter-spacing:0.08em;">蒼磨（ソウマ）</span>
+        <span style="font-size:0.95rem; color:#c0d8f0; letter-spacing:0.05em;">月島 透</span>
+      </div>
+      <div style="display:flex; align-items:baseline; gap:1rem; padding:0.75rem 0; border-bottom:1px solid rgba(100,150,220,0.12);">
+        <span style="flex-shrink:0; width:9rem; font-size:0.82rem; color:#5a8ab8; letter-spacing:0.08em;">ミラ</span>
+        <span style="font-size:0.95rem; color:#c0d8f0; letter-spacing:0.05em;">桐原 夜子</span>
+      </div>
+      <div style="display:flex; align-items:baseline; gap:1rem; padding:0.75rem 0; border-bottom:1px solid rgba(100,150,220,0.12);">
+        <span style="flex-shrink:0; width:9rem; font-size:0.82rem; color:#5a8ab8; letter-spacing:0.08em;">凛（リン）</span>
+        <span style="font-size:0.95rem; color:#c0d8f0; letter-spacing:0.05em;">日向 暖</span>
+      </div>
+      <div style="display:flex; align-items:baseline; gap:1rem; padding:0.75rem 0; border-bottom:1px solid rgba(100,150,220,0.12);">
+        <span style="flex-shrink:0; width:9rem; font-size:0.82rem; color:#5a8ab8; letter-spacing:0.08em;">宵（ヨイ）</span>
+        <span style="font-size:0.95rem; color:#c0d8f0; letter-spacing:0.05em;">藍沢 律</span>
+      </div>
+
+    </div>
+
+    <div style="margin-top:2.5rem; display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:0.4rem 2rem; font-size:0.78rem; color:#3a5878; letter-spacing:0.08em; border-top:1px solid rgba(60,100,160,0.15); padding-top:1.5rem;">
+      <p>監督　瀬川 燈</p>
+      <p>脚本　雨宮 糸</p>
+      <p>キャラクターデザイン　星野 芽衣</p>
+      <p>音楽　橘 遙</p>
+      <p>主題歌　「光の果てへ」 / 蒼月 ハル</p>
+      <p>アニメーション制作　スタジオ・ネビュラ</p>
+    </div>
+  </section>
+
+  <!-- 空の裂け目ビジュアル -->
+  <div id="rift-section">
+    <canvas id="riftCanvas"></canvas>
+    <div class="rift-text">
+      <p class="rift-label">— 霧の向こうに、まだ星はある —</p>
+    </div>
+  </div>
 
   <canvas id="glitterCanvas" style="position:fixed;inset:0;pointer-events:none;z-index:50;"></canvas>
 
   <footer>
     <p>© 2026 星空の彼方へ 製作委員会　All Rights Reserved.</p>
-    <p style="margin-top: 0.8rem;">
-      <a href="pokemon.html" style="color: #5588a0; margin: 0 0.8rem;">今日のポケモン</a>
-      <a href="guessGame.html" style="color: #5588a0; margin: 0 0.8rem;">数当てゲーム</a>
-      <a href="pokemongame.html" style="color: #5588a0; margin: 0 0.8rem;">ポケモン名前当て</a>
-      <a href="cocktail.html" style="color: #5588a0; margin: 0 0.8rem;">今日のカクテル</a>
+    <p style="margin-top: 0.6rem; font-size: 0.7rem; color: #2a4060; letter-spacing: 0.15em;">
+      VISITORS : <span id="visitCount">—</span>
     </p>
   </footer>
+
+<!-- ========== Firebase ========== -->
+<!-- 1. Firebase Console (https://console.firebase.google.com/) でプロジェクト作成 -->
+<!-- 2. Firestore Database を「本番モード」で作成し、下記ルールを設定:              -->
+<!--      match /counters/{doc} {                                                   -->
+<!--        allow read: if true;                                                    -->
+<!--        allow write: if true;                                                   -->
+<!--      }                                                                         -->
+<!-- 3. YOUR_* の部分を自分のプロジェクトの値に書き換えてください                  -->
+<script type="module">
+  import { initializeApp }                        from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+  import { getFirestore, doc, runTransaction, getDoc } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+
+  const firebaseConfig = {
+    apiKey:            'YOUR_API_KEY',
+    authDomain:        'YOUR_AUTH_DOMAIN',
+    projectId:         'YOUR_PROJECT_ID',
+    storageBucket:     'YOUR_STORAGE_BUCKET',
+    messagingSenderId: 'YOUR_MESSAGING_SENDER_ID',
+    appId:             'YOUR_APP_ID',
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db  = getFirestore(app);
+  const ref = doc(db, 'counters', 'visits');
+
+  const el = document.getElementById('visitCount');
+
+  // カウントアップしてから表示
+  runTransaction(db, async function(tx) {
+    const snap = await tx.get(ref);
+    const next = (snap.exists() ? snap.data().count : 0) + 1;
+    tx.set(ref, { count: next });
+    return next;
+  }).then(function(count) {
+    el.textContent = count.toLocaleString();
+  }).catch(function() {
+    el.textContent = '—';
+  });
+</script>
+<!-- ================================ -->
+
+<script>
+  /* 流れ星 */
+  (function() {
+    const hc  = document.getElementById('heroCanvas');
+    const hCtx = hc.getContext('2d');
+
+    function resize() {
+      hc.width  = hc.offsetWidth;
+      hc.height = hc.offsetHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    const meteors = [];
+
+    function spawnMeteor() {
+      const angle = Math.PI / 5;
+      const speed = Math.random() * 4 + 3;
+      // タイトルエリア（画面中央付近）を通るよう発生位置を絞る
+      const x = hc.width * (0.1 + Math.random() * 0.8);
+      const y = hc.height * (0.1 + Math.random() * 0.35);
+      meteors.push({
+        x, y,
+        vx:    Math.cos(angle) * speed,
+        vy:    Math.sin(angle) * speed,
+        len:   Math.random() * 160 + 80,
+        alpha: 1,
+        width: Math.random() * 1.0 + 0.3,
+      });
+    }
+
+    function animateMeteors() {
+      hCtx.clearRect(0, 0, hc.width, hc.height);
+
+      for (let i = meteors.length - 1; i >= 0; i--) {
+        const m = meteors[i];
+        m.x += m.vx;
+        m.y += m.vy;
+        m.alpha -= 0.016;
+
+        if (m.alpha <= 0) { meteors.splice(i, 1); continue; }
+
+        const tx = m.x - Math.cos(Math.PI / 5) * m.len;
+        const ty = m.y - Math.sin(Math.PI / 5) * m.len;
+        const grad = hCtx.createLinearGradient(tx, ty, m.x, m.y);
+        grad.addColorStop(0, 'rgba(200,230,255,0)');
+        grad.addColorStop(1, `rgba(200,230,255,${m.alpha.toFixed(2)})`);
+
+        hCtx.beginPath();
+        hCtx.moveTo(tx, ty);
+        hCtx.lineTo(m.x, m.y);
+        hCtx.strokeStyle = grad;
+        hCtx.lineWidth   = m.width;
+        hCtx.stroke();
+      }
+
+      requestAnimationFrame(animateMeteors);
+    }
+
+    animateMeteors();
+
+    // 2〜5秒ごとに1〜4本まとめて、少しずらして流す
+    function scheduleBurst() {
+      const count = Math.floor(Math.random() * 4) + 1;
+      for (let i = 0; i < count; i++) {
+        setTimeout(spawnMeteor, i * (Math.random() * 300 + 80));
+      }
+      setTimeout(scheduleBurst, Math.random() * 3000 + 2000);
+    }
+    setTimeout(scheduleBurst, 800);
+  })();
+</script>
+
+<script>
+  /* 空の裂け目 */
+  (function() {
+    const rc  = document.getElementById('riftCanvas');
+    const rCtx = rc.getContext('2d');
+
+    function resize() {
+      rc.width  = rc.offsetWidth;
+      rc.height = rc.offsetHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+
+    // 裂け目の制御点（右寄り）
+    const CRACK_X = 0.72;  // 裂け目の中心 X（画面幅の割合）
+
+    // 裂け目の輪郭をジグザグ + ベジェで生成
+    function buildCrack(w, h) {
+      const cx = w * CRACK_X;
+      const points = [];
+      const SEGS = 18;
+      for (let i = 0; i <= SEGS; i++) {
+        const t = i / SEGS;
+        const y = t * h;
+        // 左右にランダムにジグザグ（シード固定）
+        const jitter = (Math.sin(i * 2.3) * 0.5 + Math.sin(i * 5.1) * 0.3) * w * 0.04;
+        points.push({ x: cx + jitter, y });
+      }
+      return points;
+    }
+
+    // ランダムな小枝（裂け目から分岐）
+    function buildBranches(crack, w, h) {
+      const branches = [];
+      for (let i = 2; i < crack.length - 2; i += 3) {
+        if (Math.abs(Math.sin(i * 7.3)) > 0.5) {
+          const dir = Math.sin(i * 3.1) > 0 ? 1 : -1;
+          const len = w * (0.04 + Math.abs(Math.sin(i * 2.7)) * 0.06);
+          branches.push({
+            x1: crack[i].x, y1: crack[i].y,
+            x2: crack[i].x + dir * len,
+            y2: crack[i].y + (Math.random() * 0.5 - 0.1) * h * 0.08,
+          });
+        }
+      }
+      return branches;
+    }
+
+    let crack, branches;
+
+    function build() {
+      const w = rc.width, h = rc.height;
+      crack    = buildCrack(w, h);
+      branches = buildBranches(crack, w, h);
+    }
+    build();
+    window.addEventListener('resize', build);
+
+    let t = 0;
+
+    function draw() {
+      const w = rc.width, h = rc.height;
+      rCtx.clearRect(0, 0, w, h);
+      t += 0.008;
+
+      // 暗い星空背景
+      const bg = rCtx.createLinearGradient(0, 0, w, 0);
+      bg.addColorStop(0,   'rgba(6,11,24,0)');
+      bg.addColorStop(0.45,'rgba(6,11,24,0.6)');
+      bg.addColorStop(0.65,'rgba(8,14,32,0.92)');
+      bg.addColorStop(1,   'rgba(10,16,38,1)');
+      rCtx.fillStyle = bg;
+      rCtx.fillRect(0, 0, w, h);
+
+      // 裂け目の内側の光（裂け目から漏れる別世界の光）
+      const cx = crack[Math.floor(crack.length / 2)].x;
+      const innerGlow = rCtx.createRadialGradient(cx, h * 0.5, 0, cx, h * 0.5, w * 0.28);
+      const pulse = 0.55 + 0.15 * Math.sin(t * 1.2);
+      innerGlow.addColorStop(0,   `rgba(140,200,255,${(pulse * 0.55).toFixed(2)})`);
+      innerGlow.addColorStop(0.35,`rgba(100,160,255,${(pulse * 0.30).toFixed(2)})`);
+      innerGlow.addColorStop(0.65,`rgba(80,120,220,${(pulse * 0.12).toFixed(2)})`);
+      innerGlow.addColorStop(1,   'rgba(60,90,180,0)');
+      rCtx.fillStyle = innerGlow;
+      rCtx.fillRect(0, 0, w, h);
+
+      // 裂け目の縁の輝き
+      rCtx.save();
+      rCtx.shadowBlur  = 18;
+      rCtx.shadowColor = `rgba(160,220,255,${(0.5 + 0.2 * Math.sin(t)).toFixed(2)})`;
+
+      // メインクラック
+      rCtx.beginPath();
+      rCtx.moveTo(crack[0].x, crack[0].y);
+      for (let i = 1; i < crack.length; i++) {
+        const prev = crack[i - 1];
+        const curr = crack[i];
+        rCtx.quadraticCurveTo(
+          (prev.x + curr.x) / 2, (prev.y + curr.y) / 2,
+          curr.x, curr.y
+        );
+      }
+      const edgeAlpha = 0.7 + 0.2 * Math.sin(t * 0.9);
+      rCtx.strokeStyle = `rgba(200,235,255,${edgeAlpha.toFixed(2)})`;
+      rCtx.lineWidth   = 1.5;
+      rCtx.stroke();
+
+      // 枝
+      for (const b of branches) {
+        rCtx.beginPath();
+        rCtx.moveTo(b.x1, b.y1);
+        rCtx.lineTo(b.x2, b.y2);
+        rCtx.strokeStyle = `rgba(180,220,255,${(edgeAlpha * 0.6).toFixed(2)})`;
+        rCtx.lineWidth   = 0.8;
+        rCtx.stroke();
+      }
+      rCtx.restore();
+
+      // 裂け目の周囲に星を散らす
+      rCtx.save();
+      for (let i = 0; i < crack.length; i++) {
+        const flicker = Math.sin(t * 2.3 + i * 1.7);
+        if (flicker > 0.5) {
+          const sx = crack[i].x + (Math.sin(i * 4.1 + t) * w * 0.06);
+          const sy = crack[i].y + (Math.cos(i * 3.7 + t) * h * 0.04);
+          const sr = 0.5 + flicker * 1.0;
+          rCtx.beginPath();
+          rCtx.arc(sx, sy, sr, 0, Math.PI * 2);
+          rCtx.fillStyle = `rgba(200,230,255,${(flicker * 0.7).toFixed(2)})`;
+          rCtx.fill();
+        }
+      }
+      rCtx.restore();
+
+      requestAnimationFrame(draw);
+    }
+
+    draw();
+  })();
+</script>
+
+<script>
+  (function() {
+    const hamburger = document.getElementById('hamburger');
+    const nav       = document.getElementById('globalNav');
+    const overlay   = document.getElementById('navOverlay');
+
+    function toggleMenu() {
+      const open = hamburger.classList.toggle('open');
+      nav.classList.toggle('open', open);
+      overlay.classList.toggle('open', open);
+    }
+
+    function closeMenu() {
+      hamburger.classList.remove('open');
+      nav.classList.remove('open');
+      overlay.classList.remove('open');
+    }
+
+    hamburger.addEventListener('click', toggleMenu);
+    overlay.addEventListener('click', closeMenu);
+    nav.querySelectorAll('a').forEach(function(a) {
+      a.addEventListener('click', closeMenu);
+    });
+  })();
+</script>
 
 <script>
   const canvas = document.getElementById('glitterCanvas');
