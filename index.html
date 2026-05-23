@@ -1,23 +1,362 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <title>Example Website</title>
+  <title>星空の彼方へ - 劇場アニメ公式サイト</title>
   <meta charset="UTF-8">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css" >
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background-color: #060b18;
+      color: #e8eaf6;
+      font-family: 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif;
+      line-height: 1.8;
+    }
+
+    /* ヘッダー */
+    header {
+      position: fixed;
+      top: 0;
+      width: 100%;
+      z-index: 100;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: linear-gradient(to bottom, rgba(6,11,24,0.95), transparent);
+    }
+
+    header .logo {
+      font-size: 0.85rem;
+      letter-spacing: 0.15em;
+      color: #a5c4f3;
+    }
+
+    header nav a {
+      color: #c5d8f5;
+      text-decoration: none;
+      margin-left: 2rem;
+      font-size: 0.85rem;
+      letter-spacing: 0.1em;
+      transition: color 0.2s;
+    }
+
+    header nav a:hover {
+      color: #fff;
+    }
+
+    /* ヒーローバナー */
+    #hero {
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      position: relative;
+      background:
+        radial-gradient(ellipse at 30% 20%, rgba(80, 120, 220, 0.3) 0%, transparent 55%),
+        radial-gradient(ellipse at 70% 80%, rgba(140, 60, 200, 0.25) 0%, transparent 50%),
+        linear-gradient(160deg, #070d20 0%, #0d1535 50%, #130820 100%);
+      overflow: hidden;
+    }
+
+    /* 星のエフェクト */
+    #hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        radial-gradient(1px 1px at 15% 20%, rgba(255,255,255,0.8) 0%, transparent 100%),
+        radial-gradient(1px 1px at 40% 10%, rgba(255,255,255,0.6) 0%, transparent 100%),
+        radial-gradient(1.5px 1.5px at 65% 35%, rgba(255,255,255,0.9) 0%, transparent 100%),
+        radial-gradient(1px 1px at 80% 15%, rgba(255,255,255,0.5) 0%, transparent 100%),
+        radial-gradient(1px 1px at 25% 60%, rgba(255,255,255,0.7) 0%, transparent 100%),
+        radial-gradient(1.5px 1.5px at 90% 55%, rgba(255,255,255,0.8) 0%, transparent 100%),
+        radial-gradient(1px 1px at 50% 80%, rgba(255,255,255,0.6) 0%, transparent 100%),
+        radial-gradient(1px 1px at 10% 85%, rgba(255,255,255,0.5) 0%, transparent 100%),
+        radial-gradient(1px 1px at 75% 70%, rgba(255,255,255,0.7) 0%, transparent 100%),
+        radial-gradient(1px 1px at 55% 50%, rgba(200,200,255,0.6) 0%, transparent 100%);
+    }
+
+    .hero-eyecatch {
+      font-size: 0.8rem;
+      letter-spacing: 0.3em;
+      color: #7baee8;
+      text-transform: uppercase;
+      margin-bottom: 1.5rem;
+    }
+
+    .hero-title {
+      font-size: clamp(3rem, 8vw, 6rem);
+      font-weight: bold;
+      letter-spacing: 0.15em;
+      background: linear-gradient(135deg, #e8f4ff 0%, #a8d4ff 40%, #c8a8ff 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 1rem;
+      text-shadow: none;
+    }
+
+    .hero-subtitle {
+      font-size: 1rem;
+      color: #8ab4d8;
+      letter-spacing: 0.2em;
+      margin-bottom: 2.5rem;
+    }
+
+    .hero-release {
+      font-size: 0.9rem;
+      color: #c0d8f0;
+      letter-spacing: 0.15em;
+      border: 1px solid rgba(160, 200, 255, 0.3);
+      padding: 0.5rem 2rem;
+      border-radius: 2px;
+    }
+
+    .scroll-hint {
+      position: absolute;
+      bottom: 2rem;
+      font-size: 0.75rem;
+      color: #5a7a9a;
+      letter-spacing: 0.2em;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 0.4; }
+      50% { opacity: 1; }
+    }
+
+    /* セクション共通 */
+    section {
+      padding: 5rem 1.5rem;
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .section-label {
+      font-size: 0.75rem;
+      letter-spacing: 0.3em;
+      color: #5a8ab8;
+      text-transform: uppercase;
+      margin-bottom: 0.5rem;
+    }
+
+    .section-title {
+      font-size: 1.8rem;
+      font-weight: bold;
+      color: #d0e8ff;
+      margin-bottom: 2.5rem;
+      padding-bottom: 0.8rem;
+      border-bottom: 1px solid rgba(100, 150, 220, 0.3);
+    }
+
+    /* 予告動画 */
+    #trailer {
+      background: linear-gradient(180deg, transparent, rgba(20, 30, 60, 0.5), transparent);
+    }
+
+    #trailer section {
+      text-align: center;
+    }
+
+    .video-wrapper {
+      position: relative;
+      padding-top: 56.25%;
+      border-radius: 4px;
+      overflow: hidden;
+      box-shadow: 0 8px 40px rgba(60, 100, 200, 0.3);
+      border: 1px solid rgba(100, 150, 220, 0.2);
+    }
+
+    .video-wrapper iframe {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    /* あらすじ */
+    #story p {
+      color: #b0c8e8;
+      font-size: 1.05rem;
+      line-height: 2.1;
+    }
+
+    /* キャラクター */
+    .character-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .character-card {
+      background: linear-gradient(160deg, rgba(20,35,70,0.8), rgba(15,20,45,0.9));
+      border: 1px solid rgba(100, 150, 220, 0.2);
+      border-radius: 4px;
+      overflow: hidden;
+      transition: transform 0.25s, box-shadow 0.25s;
+    }
+
+    .character-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 32px rgba(60, 100, 200, 0.25);
+    }
+
+    .character-img {
+      width: 100%;
+      aspect-ratio: 3/4;
+      background: linear-gradient(160deg, #1a2a50, #2a1a50);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 4rem;
+      color: rgba(160, 200, 255, 0.3);
+    }
+
+    .character-info {
+      padding: 1rem 1.2rem 1.4rem;
+    }
+
+    .character-name-ja {
+      font-size: 1.1rem;
+      font-weight: bold;
+      color: #d0e8ff;
+    }
+
+    .character-name-en {
+      font-size: 0.75rem;
+      color: #5a7a9a;
+      letter-spacing: 0.1em;
+      margin-bottom: 0.5rem;
+    }
+
+    .character-desc {
+      font-size: 0.82rem;
+      color: #8aaccc;
+      line-height: 1.7;
+    }
+
+    /* フッター */
+    footer {
+      text-align: center;
+      padding: 3rem 1rem;
+      font-size: 0.75rem;
+      color: #3a5070;
+      border-top: 1px solid rgba(60, 100, 160, 0.15);
+      letter-spacing: 0.1em;
+    }
   </style>
 </head>
 <body>
-  <main class="container">
-    <h1>Example Website</h1>
-    <p>これはウェブサイトです。</p>
-    
-    <ul>
-      <li><a href="https://www.google.com/">Google</a></li>
-      <li><a href="https://www.yahoo.co.jp/">Yahoo! JAPAN</a></li>
-    </ul>
-    
-    <img src="computer01_smile.png" alt="笑顔のコンピューター">
-  </main>
+
+  <header>
+    <div class="logo">星空の彼方へ</div>
+    <nav>
+      <a href="#trailer">予告</a>
+      <a href="#story">あらすじ</a>
+      <a href="#characters">キャラクター</a>
+    </nav>
+  </header>
+
+  <!-- ヒーローバナー -->
+  <div id="hero">
+    <p class="hero-eyecatch">劇場アニメーション</p>
+    <h1 class="hero-title">星空の彼方へ</h1>
+    <p class="hero-subtitle">― すべての光は、誰かへの言葉だった ―</p>
+    <p class="hero-release">2026年 夏　全国公開</p>
+    <p class="scroll-hint">▼ SCROLL</p>
+  </div>
+
+  <!-- 予告動画 -->
+  <div id="trailer">
+    <section>
+      <p class="section-label">Trailer</p>
+      <h2 class="section-title">予告動画</h2>
+      <div class="video-wrapper">
+        <!-- YouTubeのURLをここに貼り替えてください -->
+        <iframe
+          src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+          title="予告動画"
+          frameborder="0"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowfullscreen>
+        </iframe>
+      </div>
+    </section>
+  </div>
+
+  <!-- あらすじ -->
+  <section id="story">
+    <p class="section-label">Story</p>
+    <h2 class="section-title">あらすじ</h2>
+    <p>
+      星が見えなくなった世界。夜空を覆う「光の霧」が広がって三年が過ぎた。<br>
+      天文台の廃墟に住む少女・アオは、ある夜、空の裂け目から降ってきた一人の少年・ルイと出会う。<br>
+      彼は、消えた星を取り戻すために「霧の向こう側」から来たという。
+    </p>
+    <br>
+    <p>
+      ふたりは星を探す旅に出る。でも、アオが本当に探していたのは——<br>
+      三年前に星空の中へ消えた、お兄ちゃんの声だった。
+    </p>
+  </section>
+
+  <!-- キャラクター紹介 -->
+  <section id="characters">
+    <p class="section-label">Characters</p>
+    <h2 class="section-title">キャラクター</h2>
+    <div class="character-grid">
+
+      <div class="character-card">
+        <div class="character-img">✦</div>
+        <div class="character-info">
+          <p class="character-name-ja">碧（アオ）</p>
+          <p class="character-name-en">Ao</p>
+          <p class="character-desc">天文台の廃墟で一人暮らす16歳の少女。星が見えない世界でも、毎晩空を見上げ続けている。</p>
+        </div>
+      </div>
+
+      <div class="character-card">
+        <div class="character-img">★</div>
+        <div class="character-info">
+          <p class="character-name-ja">塁（ルイ）</p>
+          <p class="character-name-en">Rui</p>
+          <p class="character-desc">霧の向こうから来たという謎の少年。右手には星の地図が刻まれている。過去を語ろうとしない。</p>
+        </div>
+      </div>
+
+      <div class="character-card">
+        <div class="character-img">☽</div>
+        <div class="character-info">
+          <p class="character-name-ja">蒼磨（ソウマ）</p>
+          <p class="character-name-en">Soma</p>
+          <p class="character-desc">アオの行方不明の兄。かつて世界一の星観測士と呼ばれた。三年前の「光の霧」事件と深く関わる。</p>
+        </div>
+      </div>
+
+      <div class="character-card">
+        <div class="character-img">◈</div>
+        <div class="character-info">
+          <p class="character-name-ja">ミラ</p>
+          <p class="character-name-en">Mira</p>
+          <p class="character-desc">光の霧を研究する科学者。アオたちの旅に同行することになる、ちょっと不思議な大人。</p>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <footer>
+    <p>© 2026 星空の彼方へ 製作委員会　All Rights Reserved.</p>
+  </footer>
+
 </body>
 </html>
