@@ -264,6 +264,77 @@
       transition: color 0.2s;
     }
     .back-link:hover { color: #a8d4ff; }
+
+    /* メニューセクション */
+    .menu-section {
+      position: relative;
+      z-index: 1;
+      width: min(860px, 92vw);
+      margin-top: 3rem;
+    }
+
+    .menu-heading {
+      font-size: 0.68rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: #5a80a8;
+      text-align: center;
+      margin-bottom: 1.4rem;
+    }
+
+    .menu-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1rem;
+    }
+
+    .menu-item {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.09);
+      border-radius: 14px;
+      overflow: hidden;
+      transition: transform 0.2s, box-shadow 0.2s;
+      cursor: default;
+    }
+
+    .menu-item:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 28px rgba(0, 0, 0, 0.4);
+    }
+
+    .menu-item img {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      object-fit: cover;
+      display: block;
+      background: rgba(255,255,255,0.04);
+    }
+
+    .menu-item img.loading {
+      animation: shimmer 1.5s ease-in-out infinite;
+    }
+
+    .menu-info {
+      padding: 0.7rem 0.9rem 0.8rem;
+    }
+
+    .menu-name {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 0.9rem;
+      font-weight: 700;
+      font-style: italic;
+      color: #c8dcf4;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-bottom: 0.25rem;
+    }
+
+    .menu-price {
+      font-size: 0.78rem;
+      color: #ffd080;
+      letter-spacing: 0.05em;
+    }
   </style>
 </head>
 <body>
@@ -294,6 +365,11 @@
     <button id="nextButton">別のカクテルを見る</button>
     <br>
     <a class="back-link" href="index.html">トップページへ戻る</a>
+  </div>
+
+  <div class="menu-section">
+    <p class="menu-heading">Today's Menu</p>
+    <div class="menu-grid" id="menuGrid"></div>
   </div>
 
 <script>
@@ -410,6 +486,51 @@
 
   nextButton.addEventListener('click', loadCocktail);
   loadCocktail();
+
+  // カクテルメニュー（6件ランダム取得）
+  const MENU_COUNT = 8;
+  const PRICE_BASE = [900, 1000, 1100, 1200, 1300, 1400, 1500, 1600, 1800];
+  const menuGrid = document.getElementById('menuGrid');
+
+  // プレースホルダーカードを先に描画
+  for (let i = 0; i < MENU_COUNT; i++) {
+    let item = document.createElement('div');
+    item.className = 'menu-item';
+    item.innerHTML =
+      '<img class="loading" src="" alt="">' +
+      '<div class="menu-info">' +
+        '<p class="menu-name" style="background:rgba(255,255,255,0.06);height:1em;border-radius:4px;"></p>' +
+        '<p class="menu-price" style="background:rgba(255,255,255,0.04);height:0.8em;border-radius:4px;margin-top:0.3rem;width:60%;"></p>' +
+      '</div>';
+    menuGrid.appendChild(item);
+  }
+
+  function fetchMenuItem(index) {
+    return fetch('https://www.thecocktaildb.com/api/json/v1/1/random.php')
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        let d = data.drinks[0];
+        let price = PRICE_BASE[Math.floor(Math.random() * PRICE_BASE.length)];
+        let card = menuGrid.children[index];
+
+        let img = card.querySelector('img');
+        let newImg = new Image();
+        newImg.onload = function() {
+          img.src = newImg.src;
+          img.className = '';
+        };
+        newImg.src = d.strDrinkThumb;
+
+        let info = card.querySelector('.menu-info');
+        info.innerHTML =
+          '<p class="menu-name">' + d.strDrink + '</p>' +
+          '<p class="menu-price">¥' + price.toLocaleString() + '</p>';
+      });
+  }
+
+  for (let i = 0; i < MENU_COUNT; i++) {
+    fetchMenuItem(i);
+  }
 </script>
 
   <canvas id="glitterCanvas" style="position:fixed;inset:0;pointer-events:none;z-index:50;"></canvas>
