@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <title>数当てゲーム</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css" >
+  <style>
+    body {
+      background: linear-gradient(160deg, #e0f4ff 0%, #b8e8f8 40%, #d4f5e2 100%);
+      min-height: 100vh;
+      color: #1a4a5a;
+      overflow-x: hidden;
+    }
+
+    /* 雲のベーススタイル */
+    .cloud {
+      position: fixed;
+      background: white;
+      border-radius: 50px;
+      opacity: 0.75;
+      animation: floatCloud linear infinite;
+    }
+
+    .cloud::before,
+    .cloud::after {
+      content: '';
+      position: absolute;
+      background: white;
+      border-radius: 50%;
+    }
+
+    /* 雲のサイズバリエーション */
+    .cloud.s { width: 80px;  height: 28px; }
+    .cloud.m { width: 130px; height: 42px; }
+    .cloud.l { width: 180px; height: 55px; }
+
+    .cloud.s::before { width: 40px; height: 40px; top: -20px; left: 12px; }
+    .cloud.s::after  { width: 28px; height: 28px; top: -12px; left: 38px; }
+
+    .cloud.m::before { width: 65px; height: 65px; top: -32px; left: 20px; }
+    .cloud.m::after  { width: 45px; height: 45px; top: -20px; left: 62px; }
+
+    .cloud.l::before { width: 90px; height: 90px; top: -45px; left: 28px; }
+    .cloud.l::after  { width: 62px; height: 62px; top: -28px; left: 88px; }
+
+    /* 各雲の位置・速度 */
+    .cloud:nth-child(1) { top:  8%; animation-duration: 28s; animation-delay:   0s; }
+    .cloud:nth-child(2) { top: 18%; animation-duration: 40s; animation-delay:  -8s; }
+    .cloud:nth-child(3) { top: 35%; animation-duration: 22s; animation-delay: -14s; }
+    .cloud:nth-child(4) { top: 55%; animation-duration: 35s; animation-delay:  -4s; }
+    .cloud:nth-child(5) { top: 70%; animation-duration: 50s; animation-delay: -20s; }
+    .cloud:nth-child(6) { top: 85%; animation-duration: 30s; animation-delay: -10s; }
+
+    @keyframes floatCloud {
+      from { transform: translateX(110vw); }
+      to   { transform: translateX(-300px); }
+    }
+
+    main {
+      padding-top: 3rem;
+      padding-bottom: 3rem;
+    }
+
+    h1 {
+      text-align: center;
+      font-size: 2rem;
+      color: #0077a8;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.3rem;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #4aa8c8;
+      font-size: 0.9rem;
+      margin-bottom: 2.5rem;
+      letter-spacing: 0.1em;
+    }
+
+    #guessGame {
+      background: rgba(255, 255, 255, 0.75);
+      border-radius: 20px;
+      padding: 2.5rem 2rem;
+      box-shadow: 0 8px 32px rgba(0, 140, 200, 0.12);
+      max-width: 480px;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    label {
+      font-size: 1rem;
+      color: #2a7a9a;
+      font-weight: bold;
+    }
+
+    #guessField {
+      width: 140px;
+      border: 2px solid #7dd4f0;
+      border-radius: 10px;
+      padding: 0.4rem 0.8rem;
+      font-size: 1.1rem;
+      text-align: center;
+      background: #f0faff;
+      color: #1a4a5a;
+      margin: 0.8rem 0.3rem;
+    }
+
+    #guessField:focus {
+      outline: none;
+      border-color: #00aadd;
+      background: #fff;
+    }
+
+    #guessSubmit {
+      background: linear-gradient(135deg, #00aadd, #0077a8);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      padding: 0.5rem 1.4rem;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s;
+      margin: 0.3rem;
+      width: auto;
+    }
+
+    #guessSubmit:hover:not(:disabled) {
+      opacity: 0.85;
+      transform: translateY(-1px);
+    }
+
+    #guessSubmit:disabled {
+      background: #b0ccd8;
+      cursor: default;
+    }
+
+    #guessReset {
+      background: linear-gradient(135deg, #f9a040, #f07020);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      padding: 0.5rem 1.4rem;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s;
+      margin: 0.3rem;
+      width: auto;
+    }
+
+    #guessReset:hover {
+      opacity: 0.85;
+      transform: translateY(-1px);
+    }
+
+    #guessRemaining {
+      margin-top: 1.2rem;
+      font-size: 0.95rem;
+      color: #4a8aa8;
+      font-weight: bold;
+    }
+
+    #guessResult {
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: #0077a8;
+      min-height: 1.8rem;
+      margin-top: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+
+<!-- 雲 -->
+<div class="cloud m"></div>
+<div class="cloud l"></div>
+<div class="cloud s"></div>
+<div class="cloud m"></div>
+<div class="cloud s"></div>
+<div class="cloud l"></div>
+
+<main class="container">
+  <h1>数当てゲーム (1~100)</h1>
+  <p class="subtitle">☀️ 1〜100の数字を当てよう！残り10回</p>
+
+  <div id="guessGame">
+    <label for="guessField">予想: </label>
+    <input type="number" min="1" max="100" id="guessField">
+    <input type="submit" value="予想を入力" id="guessSubmit">
+    <input type="button" value="リセット" id="guessReset">
+    <p id="guessRemaining">残り試行回数: 10
+    </p>
+    <p id="guessResult"></p>
+    <p id="guessCat" style="font-size: 4rem; display: none;">☀️</p>
+  </div>
+</main>
+
+<script>
+  const MAX_TRIES = 10;
+
+  let answerNumber = Math.floor(Math.random() * 100) + 1;
+  console.log('正解は' + answerNumber);
+
+  let remainingTries = MAX_TRIES;
+
+  let guessField = document.querySelector('#guessField');
+  let guessSubmit = document.querySelector('#guessSubmit');
+  let guessResult = document.querySelector('#guessResult');
+  let guessCat = document.querySelector('#guessCat');
+  let guessRemaining = document.querySelector('#guessRemaining');
+
+  function checkGuess() {
+    let userGuess = Number(guessField.value);
+    remainingTries--;
+    guessField.value = '';
+
+    if (userGuess === answerNumber) {
+      guessResult.textContent = '正解です！';
+      guessCat.style.display = 'block';
+      guessRemaining.textContent = '';
+      guessSubmit.disabled = true;
+    } else if (remainingTries === 0) {
+      guessResult.textContent = 'ゲームオーバー！正解は ' + answerNumber + ' でした。';
+      guessRemaining.textContent = '残り試行回数: 0';
+      guessSubmit.disabled = true;
+    } else if (userGuess < answerNumber) {
+      guessResult.textContent = 'もっと大きいです';
+      guessRemaining.textContent = '残り試行回数: ' + remainingTries;
+    } else {
+      guessResult.textContent = 'もっと小さいです';
+      guessRemaining.textContent = '残り試行回数: ' + remainingTries;
+    }
+  }
+
+  guessSubmit.addEventListener('click', checkGuess);
+
+  let guessReset = document.querySelector('#guessReset');
+
+  function resetGame() {
+    answerNumber = Math.floor(Math.random() * 100) + 1;
+    console.log('正解は' + answerNumber);
+    remainingTries = MAX_TRIES;
+    guessField.value = '';
+    guessResult.textContent = '';
+    guessCat.style.display = 'none';
+    guessRemaining.textContent = '残り試行回数: ' + MAX_TRIES;
+    guessSubmit.disabled = false;
+  }
+
+  guessReset.addEventListener('click', resetGame);
+</script>
+
+</body>
+</html>
