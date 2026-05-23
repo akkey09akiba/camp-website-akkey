@@ -354,13 +354,117 @@
     </div>
   </section>
 
+  <canvas id="glitterCanvas" style="position:fixed;inset:0;pointer-events:none;z-index:50;"></canvas>
+
   <footer>
     <p>© 2026 星空の彼方へ 製作委員会　All Rights Reserved.</p>
     <p style="margin-top: 0.8rem;">
       <a href="pokemon.html" style="color: #5588a0; margin: 0 0.8rem;">今日のポケモン</a>
       <a href="guessGame.html" style="color: #5588a0; margin: 0 0.8rem;">数当てゲーム</a>
+      <a href="pokemongame.html" style="color: #5588a0; margin: 0 0.8rem;">ポケモン名前当て</a>
+      <a href="cocktail.html" style="color: #5588a0; margin: 0 0.8rem;">今日のカクテル</a>
     </p>
   </footer>
+
+<script>
+  const canvas = document.getElementById('glitterCanvas');
+  const ctx = canvas.getContext('2d');
+
+  function resize() {
+    canvas.width  = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  // ラメ粒子の設定
+  const PARTICLE_COUNT = 120;
+  const particles = [];
+
+  const colors = [
+    'rgba(255,255,255,',
+    'rgba(200,220,255,',
+    'rgba(180,200,255,',
+    'rgba(220,180,255,',
+    'rgba(160,230,255,',
+  ];
+
+  function randomParticle(p) {
+    p.x      = Math.random() * canvas.width;
+    p.y      = Math.random() * canvas.height;
+    p.size   = Math.random() * 1.8 + 0.4;
+    p.color  = colors[Math.floor(Math.random() * colors.length)];
+    p.alpha  = 0;
+    p.target = Math.random() * 0.8 + 0.2;   // 最大輝度
+    p.speed  = Math.random() * 0.015 + 0.005; // フェード速度
+    p.phase  = Math.random() < 0.5 ? 'in' : 'out';
+    p.drift  = (Math.random() - 0.5) * 0.3;  // ゆっくり漂う
+  }
+
+  for (let i = 0; i < PARTICLE_COUNT; i++) {
+    const p = {};
+    randomParticle(p);
+    p.alpha = Math.random(); // 最初はランダムな状態から開始
+    particles.push(p);
+  }
+
+  function drawStar(x, y, size, alpha, color) {
+    ctx.save();
+    ctx.translate(x, y);
+
+    // 十字の光芒（ラメっぽい形）
+    ctx.globalAlpha = alpha;
+    const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, size * 4);
+    gradient.addColorStop(0, color + '1)');
+    gradient.addColorStop(0.3, color + (alpha * 0.6).toFixed(2) + ')');
+    gradient.addColorStop(1, color + '0)');
+
+    // 縦横の光条
+    for (let angle of [0, Math.PI / 2]) {
+      ctx.save();
+      ctx.rotate(angle);
+      ctx.beginPath();
+      ctx.moveTo(-size * 4, 0);
+      ctx.lineTo(size * 4, 0);
+      ctx.strokeStyle = color + (alpha * 0.4).toFixed(2) + ')';
+      ctx.lineWidth = size * 0.6;
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // 中心の輝点
+    ctx.beginPath();
+    ctx.arc(0, 0, size, 0, Math.PI * 2);
+    ctx.fillStyle = gradient;
+    ctx.fill();
+
+    ctx.restore();
+  }
+
+  function animate() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    for (const p of particles) {
+      // フェードイン/アウト
+      if (p.phase === 'in') {
+        p.alpha += p.speed;
+        if (p.alpha >= p.target) p.phase = 'out';
+      } else {
+        p.alpha -= p.speed;
+        if (p.alpha <= 0) randomParticle(p); // 消えたらリセット
+      }
+
+      // ゆっくり漂う
+      p.x += p.drift;
+
+      drawStar(p.x, p.y, p.size, Math.max(0, p.alpha), p.color);
+    }
+
+    requestAnimationFrame(animate);
+  }
+
+  animate();
+</script>
 
 </body>
 </html>

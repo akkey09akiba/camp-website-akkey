@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <title>このポケモンだーれだ？</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background:
+        radial-gradient(ellipse at 30% 20%, rgba(80, 120, 220, 0.3) 0%, transparent 55%),
+        radial-gradient(ellipse at 70% 80%, rgba(140, 60, 200, 0.25) 0%, transparent 50%),
+        linear-gradient(160deg, #070d20 0%, #0d1535 50%, #130820 100%);
+      min-height: 100vh;
+      font-family: 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif;
+      color: #e8eaf6;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow-x: hidden;
+      padding: 5rem 0 3rem;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        radial-gradient(1px 1px at 10% 15%, rgba(255,255,255,0.8) 0%, transparent 100%),
+        radial-gradient(1px 1px at 30% 8%,  rgba(255,255,255,0.6) 0%, transparent 100%),
+        radial-gradient(1.5px 1.5px at 55% 20%, rgba(255,255,255,0.9) 0%, transparent 100%),
+        radial-gradient(1px 1px at 78% 12%, rgba(255,255,255,0.5) 0%, transparent 100%),
+        radial-gradient(1px 1px at 90% 35%, rgba(255,255,255,0.7) 0%, transparent 100%),
+        radial-gradient(1px 1px at 20% 55%, rgba(255,255,255,0.6) 0%, transparent 100%),
+        radial-gradient(1.5px 1.5px at 65% 60%, rgba(255,255,255,0.8) 0%, transparent 100%),
+        radial-gradient(1px 1px at 45% 80%, rgba(255,255,255,0.5) 0%, transparent 100%),
+        radial-gradient(1px 1px at 85% 75%, rgba(200,200,255,0.7) 0%, transparent 100%),
+        radial-gradient(1px 1px at 5%  90%, rgba(255,255,255,0.6) 0%, transparent 100%);
+    }
+
+    header {
+      position: fixed;
+      top: 0;
+      width: 100%;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: linear-gradient(to bottom, rgba(6,11,24,0.95), transparent);
+      z-index: 10;
+    }
+
+    header .logo { font-size: 0.85rem; letter-spacing: 0.15em; color: #a5c4f3; }
+
+    header a {
+      color: #c5d8f5;
+      text-decoration: none;
+      font-size: 0.85rem;
+      letter-spacing: 0.1em;
+      transition: color 0.2s;
+    }
+    header a:hover { color: #fff; }
+
+    .card {
+      position: relative;
+      z-index: 1;
+      background: rgba(255, 255, 255, 0.06);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 24px;
+      padding: 3rem 2.5rem 2.5rem;
+      width: min(420px, 90vw);
+      text-align: center;
+      box-shadow: 0 8px 40px rgba(0, 0, 0, 0.4);
+    }
+
+    .eyecatch {
+      font-size: 0.72rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: #7baee8;
+      margin-bottom: 0.5rem;
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      font-weight: bold;
+      letter-spacing: 0.1em;
+      background: linear-gradient(135deg, #e8f4ff 0%, #a8d4ff 40%, #c8a8ff 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 1.5rem;
+    }
+
+    /* ポケモン表示エリア */
+    #pokemonDisplay {
+      position: relative;
+      height: 180px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #sparkleCanvas {
+      position: absolute;
+      inset: -60px;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    #pokemonImage {
+      width: 160px;
+      height: 160px;
+      image-rendering: pixelated;
+      position: relative;
+      z-index: 2;
+    }
+
+    #pokemonImage.silhouette {
+      filter: brightness(0) drop-shadow(0 0 12px rgba(100,140,255,0.4));
+    }
+
+    #pokemonImage.revealed {
+      filter: drop-shadow(0 0 20px rgba(160, 200, 255, 0.5));
+    }
+
+    /* モンスターボール */
+    #pokeball { position: absolute; width: 100px; height: 100px; z-index: 3; }
+
+    /* ---- ボール共通 ---- */
+    .ball-top {
+      position: absolute; top: 0; left: 0;
+      width: 100px; height: 50px;
+      border-radius: 50px 50px 0 0;
+      border: 3px solid #1a1a1a; border-bottom: none;
+    }
+    .ball-top::after {
+      content: ''; position: absolute;
+      top: 10px; left: 18px; width: 18px; height: 10px;
+      background: rgba(255,255,255,0.35);
+      border-radius: 50%; transform: rotate(-25deg);
+    }
+    .ball-bottom {
+      position: absolute; bottom: 0; left: 0;
+      width: 100px; height: 50px;
+      background: radial-gradient(circle at 35% 55%, #ffffff, #d8d8d8);
+      border-radius: 0 0 50px 50px;
+      border: 3px solid #1a1a1a; border-top: none;
+    }
+
+    /* モンスターボール（赤） */
+    #pokeball.ball-normal .ball-top {
+      background: radial-gradient(circle at 35% 40%, #ff6060, #cc2020);
+    }
+    /* スーパーボール（青） */
+    #pokeball.ball-super .ball-top {
+      background: radial-gradient(circle at 35% 40%, #4488ff, #1144cc);
+    }
+    /* ハイパーボール（黄×黒） */
+    #pokeball.ball-hyper .ball-top {
+      background: radial-gradient(circle at 35% 40%, #ffdd44, #cc9900);
+    }
+    #pokeball.ball-hyper .ball-bottom {
+      background: radial-gradient(circle at 35% 55%, #555, #222);
+    }
+    #pokeball.ball-hyper .ball-button {
+      background: #ffdd44; border-color: #888;
+    }
+    /* マスターボール（紫×ピンク） */
+    #pokeball.ball-master .ball-top {
+      background: radial-gradient(circle at 35% 40%, #cc88ff, #7722cc);
+    }
+    #pokeball.ball-master .ball-bottom {
+      background: radial-gradient(circle at 35% 55%, #eebcff, #cc88ff);
+    }
+    #pokeball.ball-master .ball-button {
+      background: #ff88cc; border-color: #7722cc;
+    }
+    /* プレミアボール（白×赤ライン） */
+    #pokeball.ball-premier .ball-top {
+      background: radial-gradient(circle at 35% 40%, #ffffff, #dddddd);
+    }
+    #pokeball.ball-premier .ball-line {
+      background: #cc2020;
+    }
+    /* スピードボール（黄緑×黒） */
+    #pokeball.ball-speed .ball-top {
+      background: radial-gradient(circle at 35% 40%, #aaee44, #66aa00);
+    }
+    #pokeball.ball-speed .ball-bottom {
+      background: radial-gradient(circle at 35% 55%, #333, #111);
+    }
+    #pokeball.ball-speed .ball-button {
+      background: #aaee44; border-color: #444;
+    }
+    .ball-line {
+      position: absolute; top: calc(50% - 1.5px); left: 0;
+      width: 100px; height: 3px; background: #1a1a1a; z-index: 1;
+    }
+    .ball-button {
+      position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 22px; height: 22px;
+      background: white; border: 3px solid #1a1a1a; border-radius: 50%;
+      z-index: 2; box-shadow: 0 0 8px rgba(255,255,255,0.5);
+    }
+    .ball-button::after {
+      content: ''; position: absolute; top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 10px; height: 10px; background: #e0e0e0; border-radius: 50%;
+    }
+
+    @keyframes ballShake {
+      0%, 100% { transform: rotate(0deg) translateY(0); }
+      20%  { transform: rotate(-18deg) translateY(-3px); }
+      40%  { transform: rotate(18deg) translateY(-3px); }
+      60%  { transform: rotate(-10deg) translateY(-2px); }
+      80%  { transform: rotate(10deg) translateY(-2px); }
+    }
+    @keyframes ballTopOpen {
+      from { transform: translateY(0) rotate(0deg); opacity: 1; }
+      to   { transform: translateY(-55px) rotate(-20deg); opacity: 0; }
+    }
+    @keyframes ballBottomOpen {
+      from { transform: translateY(0) rotate(0deg); opacity: 1; }
+      to   { transform: translateY(45px) rotate(15deg); opacity: 0; }
+    }
+    @keyframes ballPartFade { from { opacity: 1; } to { opacity: 0; } }
+
+    #pokeball.shaking { animation: ballShake 0.65s ease-in-out; }
+    #pokeball.opening .ball-top    { animation: ballTopOpen    0.4s ease-out forwards; }
+    #pokeball.opening .ball-bottom { animation: ballBottomOpen 0.4s ease-out forwards; }
+    #pokeball.opening .ball-line,
+    #pokeball.opening .ball-button { animation: ballPartFade   0.2s ease-out forwards; }
+
+    #pokeballFlash {
+      position: absolute; inset: -20px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(220,240,255,1) 0%, rgba(160,210,255,0.6) 40%, transparent 70%);
+      opacity: 0; pointer-events: none; z-index: 4;
+    }
+    @keyframes flashBurst {
+      0%   { opacity: 0; transform: scale(0.2); }
+      25%  { opacity: 1; transform: scale(1.4); }
+      60%  { opacity: 0.6; transform: scale(1.1); }
+      100% { opacity: 0; transform: scale(1.6); }
+    }
+    #pokeballFlash.flashing { animation: flashBurst 0.55s ease-out forwards; }
+
+    @keyframes pokemonFadeIn {
+      0%   { opacity: 0; transform: scale(1.05); }
+      100% { opacity: 1; transform: scale(1); }
+    }
+    @keyframes pokemonFloat {
+      0%, 100% { transform: translateY(0); }
+      50%      { transform: translateY(-8px); }
+    }
+    #pokemonImage.appearing { animation: pokemonFadeIn 0.7s ease-out forwards; }
+    #pokemonImage.floating  { animation: pokemonFloat 2.8s ease-in-out infinite; }
+
+    /* 正解アニメーション */
+    @keyframes revealPulse {
+      0%   { transform: scale(1); }
+      40%  { transform: scale(1.15); }
+      100% { transform: scale(1); }
+    }
+    #pokemonImage.correct-reveal {
+      animation: revealPulse 0.5s ease-out forwards;
+    }
+
+    /* 正解表示 */
+    #pokemonName {
+      font-size: 1.6rem;
+      font-weight: bold;
+      letter-spacing: 0.1em;
+      color: #d0e8ff;
+      margin-top: 0.8rem;
+      min-height: 2rem;
+    }
+
+    #correctMsg {
+      font-size: 0.9rem;
+      font-weight: bold;
+      color: #7de0a8;
+      letter-spacing: 0.1em;
+      min-height: 1.4rem;
+      margin-top: 0.3rem;
+    }
+
+    /* 入力エリア */
+    .guess-area {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 1.2rem;
+      justify-content: center;
+    }
+
+    #guessInput {
+      flex: 1;
+      border: 1px solid rgba(160, 200, 255, 0.3);
+      border-radius: 10px;
+      padding: 0.5rem 0.8rem;
+      font-size: 1rem;
+      background: rgba(255, 255, 255, 0.08);
+      color: #e8eaf6;
+      transition: border-color 0.2s;
+    }
+    #guessInput:focus {
+      outline: none;
+      border-color: rgba(160, 200, 255, 0.7);
+      background: rgba(255, 255, 255, 0.12);
+    }
+    #guessInput::placeholder { color: #3a5a7a; }
+    #guessInput:disabled { opacity: 0.4; }
+
+    #guessButton {
+      background: linear-gradient(135deg, #a8d4ff, #5588c8);
+      color: #070d20;
+      border: none;
+      border-radius: 10px;
+      padding: 0.5rem 1.2rem;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+      white-space: nowrap;
+    }
+    #guessButton:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+    }
+    #guessButton:disabled { opacity: 0.4; cursor: default; }
+
+    #wrongMsg {
+      font-size: 0.82rem;
+      color: #e08080;
+      min-height: 1.2rem;
+      margin-top: 0.4rem;
+    }
+
+    /* ヒント（高さ・重さ） */
+    .pokemon-stats {
+      display: flex;
+      justify-content: center;
+      gap: 1.5rem;
+      margin-top: 1.2rem;
+      padding: 0.8rem 1rem;
+      background: rgba(255,255,255,0.05);
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+    .stat-item   { display: flex; flex-direction: column; gap: 0.2rem; }
+    .stat-label  { font-size: 0.68rem; color: #5a80a8; letter-spacing: 0.1em; text-transform: uppercase; }
+    .stat-value  { font-size: 1rem; font-weight: 600; color: #a8d4ff; }
+
+    /* ステータスバー */
+    #pokemonBaseStats { margin-top: 1.2rem; text-align: left; }
+    .stat-bar-row {
+      display: grid;
+      grid-template-columns: 4.5rem 2rem 1fr;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+    .stat-bar-label { font-size: 0.68rem; color: #5a80a8; letter-spacing: 0.05em; text-align: right; }
+    .stat-bar-value { font-size: 0.78rem; font-weight: 600; color: #a8d4ff; text-align: right; }
+    .stat-bar-track { height: 6px; background: rgba(255,255,255,0.08); border-radius: 3px; overflow: hidden; }
+    .stat-bar-fill  { height: 100%; border-radius: 3px; transition: width 0.6s ease; }
+
+    /* 説明文 */
+    #pokemonFlavorText {
+      margin-top: 1.2rem;
+      font-size: 0.82rem;
+      color: #8aaccc;
+      line-height: 1.8;
+      text-align: left;
+      padding: 0.8rem 1rem;
+      background: rgba(255,255,255,0.04);
+      border-radius: 10px;
+      border-left: 2px solid rgba(160,200,255,0.3);
+      min-height: 3.5rem;
+    }
+
+    /* ボタン行 */
+    .btn-row {
+      display: flex;
+      gap: 0.6rem;
+      margin-top: 1.5rem;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    #giveUpButton {
+      background: rgba(255,255,255,0.07);
+      color: #8aaccc;
+      border: 1px solid rgba(160, 200, 255, 0.2);
+      border-radius: 10px;
+      padding: 0.5rem 1.2rem;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: transform 0.15s, opacity 0.2s;
+    }
+    #giveUpButton:hover:not(:disabled) { transform: translateY(-2px); opacity: 0.8; }
+    #giveUpButton:disabled { opacity: 0.3; cursor: default; }
+
+    #nextButton {
+      background: linear-gradient(135deg, #a8d4ff, #5588c8);
+      color: #070d20;
+      border: none;
+      border-radius: 10px;
+      padding: 0.5rem 1.4rem;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    #nextButton:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.3); }
+
+    .back-link {
+      display: inline-block;
+      margin-top: 1.8rem;
+      font-size: 0.8rem;
+      color: #5588a0;
+      text-decoration: none;
+      letter-spacing: 0.1em;
+      border-bottom: 1px solid rgba(100, 150, 200, 0.3);
+      transition: color 0.2s;
+    }
+    .back-link:hover { color: #a8d4ff; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <span class="logo">このポケモンだーれだ？</span>
+    <a href="index.html">← トップへ</a>
+  </header>
+
+  <div class="card">
+    <p class="eyecatch">Who's That Pokémon?</p>
+    <h1>このポケモンだーれだ？</h1>
+
+    <div id="pokemonDisplay">
+      <canvas id="sparkleCanvas"></canvas>
+      <div id="pokeball">
+        <div class="ball-top"></div>
+        <div class="ball-line"></div>
+        <div class="ball-bottom"></div>
+        <div class="ball-button"></div>
+        <div id="pokeballFlash"></div>
+      </div>
+      <img id="pokemonImage" src="" alt="" style="opacity:0;">
+    </div>
+
+    <p id="pokemonName"></p>
+    <p id="correctMsg"></p>
+
+    <div class="guess-area">
+      <input type="text" id="guessInput" placeholder="ポケモンの名前を入力…">
+      <button id="guessButton">こたえる</button>
+    </div>
+    <p id="wrongMsg"></p>
+
+    <div class="pokemon-stats">
+      <div class="stat-item">
+        <span class="stat-label">高さ</span>
+        <span class="stat-value" id="pokemonHeight">--</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">重さ</span>
+        <span class="stat-value" id="pokemonWeight">--</span>
+      </div>
+    </div>
+
+    <div id="pokemonBaseStats"></div>
+    <p id="pokemonFlavorText"></p>
+
+    <div class="btn-row">
+      <button id="giveUpButton">あきらめる</button>
+      <button id="nextButton">つぎのポケモン</button>
+    </div>
+
+    <a class="back-link" href="index.html">トップページへ戻る</a>
+  </div>
+
+<script>
+  let pokemonImage    = document.getElementById('pokemonImage');
+  let pokemonName     = document.getElementById('pokemonName');
+  let correctMsg      = document.getElementById('correctMsg');
+  let wrongMsg        = document.getElementById('wrongMsg');
+  let guessInput      = document.getElementById('guessInput');
+  let guessButton     = document.getElementById('guessButton');
+  let giveUpButton    = document.getElementById('giveUpButton');
+  let nextButton      = document.getElementById('nextButton');
+  let pokeball        = document.getElementById('pokeball');
+  let pokeballFlash   = document.getElementById('pokeballFlash');
+  let pokemonHeight   = document.getElementById('pokemonHeight');
+  let pokemonWeight   = document.getElementById('pokemonWeight');
+  let pokemonBaseStats = document.getElementById('pokemonBaseStats');
+  let pokemonFlavorText = document.getElementById('pokemonFlavorText');
+  let sparkleCanvas   = document.getElementById('sparkleCanvas');
+  let sCtx            = sparkleCanvas.getContext('2d');
+
+  // 現在のポケモンの正解名（カタカナ・漢字など複数保持）
+  let correctNames = [];
+
+  const statNames = {
+    hp: 'HP', attack: 'こうげき', defense: 'ぼうぎょ',
+    'special-attack': 'とくこう', 'special-defense': 'とくぼう', speed: 'すばやさ'
+  };
+
+  function statColor(value) {
+    if (value >= 90) return 'linear-gradient(90deg, #5588c8, #a8d4ff)';
+    if (value >= 60) return 'linear-gradient(90deg, #4a9a70, #7de0a8)';
+    if (value >= 40) return 'linear-gradient(90deg, #9a7a20, #e0c060)';
+    return 'linear-gradient(90deg, #9a3030, #e06060)';
+  }
+
+  const typeNames = {
+    normal: 'ノーマル', fire: 'ほのお', water: 'みず', electric: 'でんき',
+    grass: 'くさ', ice: 'こおり', fighting: 'かくとう', poison: 'どく',
+    ground: 'じめん', flying: 'ひこう', psychic: 'エスパー', bug: 'むし',
+    rock: 'いわ', ghost: 'ゴースト', dragon: 'ドラゴン', dark: 'あく',
+    steel: 'はがね', fairy: 'フェアリー'
+  };
+
+  // ---- sparkle ----
+  (function() {
+    sparkleCanvas.width  = sparkleCanvas.offsetWidth;
+    sparkleCanvas.height = sparkleCanvas.offsetHeight;
+  })();
+
+  function burstSparkles() {
+    let w = sparkleCanvas.width, h = sparkleCanvas.height;
+    let cx = w / 2, cy = h / 2;
+    const RADIUS = 65;
+    const COLORS = [
+      'rgba(255,255,255,', 'rgba(200,230,255,',
+      'rgba(180,210,255,', 'rgba(220,180,255,', 'rgba(140,230,255,',
+    ];
+    let particles = [];
+
+    function spawnFromOutline(count, speedMin, speedMax) {
+      for (let i = 0; i < count; i++) {
+        let angle = Math.random() * Math.PI * 2;
+        let r  = RADIUS + (Math.random() - 0.5) * 20;
+        let ox = cx + Math.cos(angle) * r;
+        let oy = cy + Math.sin(angle) * r;
+        let speed  = Math.random() * (speedMax - speedMin) + speedMin;
+        let spread = (Math.random() - 0.5) * 0.6;
+        particles.push({
+          x: ox, y: oy,
+          vx: Math.cos(angle + spread) * speed,
+          vy: Math.sin(angle + spread) * speed,
+          size: Math.random() * 2.5 + 0.8,
+          color: COLORS[Math.floor(Math.random() * COLORS.length)],
+          alpha: 1,
+          decay: Math.random() * 0.022 + 0.012,
+          twinkle: Math.random() * Math.PI,
+        });
+      }
+    }
+
+    setTimeout(function() { spawnFromOutline(30, 2.5, 5.0); },   0);
+    setTimeout(function() { spawnFromOutline(20, 1.5, 3.5); }, 120);
+    setTimeout(function() { spawnFromOutline(15, 1.0, 2.5); }, 260);
+
+    function drawSparkle(x, y, size, alpha, color) {
+      sCtx.save();
+      sCtx.translate(x, y);
+      sCtx.globalAlpha = alpha;
+      for (let a of [0, Math.PI / 2]) {
+        sCtx.save();
+        sCtx.rotate(a);
+        sCtx.beginPath();
+        sCtx.moveTo(-size * 3.5, 0);
+        sCtx.lineTo(size * 3.5, 0);
+        sCtx.strokeStyle = color + (alpha * 0.5).toFixed(2) + ')';
+        sCtx.lineWidth = size * 0.5;
+        sCtx.stroke();
+        sCtx.restore();
+      }
+      let g = sCtx.createRadialGradient(0, 0, 0, 0, 0, size * 2);
+      g.addColorStop(0, color + '1)');
+      g.addColorStop(1, color + '0)');
+      sCtx.beginPath();
+      sCtx.arc(0, 0, size * 2, 0, Math.PI * 2);
+      sCtx.fillStyle = g;
+      sCtx.fill();
+      sCtx.restore();
+    }
+
+    function animate() {
+      sCtx.clearRect(0, 0, w, h);
+      let alive = false;
+      for (let p of particles) {
+        if (p.alpha <= 0) continue;
+        alive = true;
+        p.x += p.vx; p.y += p.vy;
+        p.vy += 0.04; p.vx *= 0.97;
+        p.alpha -= p.decay;
+        p.twinkle += 0.2;
+        let a = Math.max(0, p.alpha) * (0.7 + 0.3 * Math.sin(p.twinkle));
+        drawSparkle(p.x, p.y, p.size, a, p.color);
+      }
+      if (alive) requestAnimationFrame(animate);
+    }
+    animate();
+  }
+
+  // ---- pokeball animation ----
+  const BALL_TYPES = ['ball-normal', 'ball-super', 'ball-hyper', 'ball-master', 'ball-premier', 'ball-speed'];
+
+  function playPokeballAnimation(onComplete) {
+    pokeball.style.display = 'block';
+    pokeball.style.opacity = '1';
+    pokemonImage.style.opacity = '0';
+    // silhouette は呼び出し元で付与済みなので外さない
+    pokemonImage.classList.remove('appearing', 'floating', 'revealed', 'correct-reveal');
+    // ランダムなボール種類を適用
+    pokeball.className = BALL_TYPES[Math.floor(Math.random() * BALL_TYPES.length)];
+    pokeballFlash.className = '';
+
+    setTimeout(function() { pokeball.classList.add('shaking'); }, 100);
+
+    setTimeout(function() {
+      pokeball.classList.remove('shaking');
+      pokeball.classList.add('opening');
+    }, 800);
+
+    setTimeout(function() { pokeballFlash.classList.add('flashing'); }, 1150);
+
+    setTimeout(function() {
+      pokeball.style.display = 'none';
+      pokemonImage.classList.add('appearing');
+      onComplete();
+    }, 1280);
+
+    setTimeout(function() {
+      pokemonImage.style.opacity = '1';
+      pokemonImage.classList.remove('appearing');
+      // silhouette は維持したまま floating を追加
+      pokemonImage.classList.add('floating');
+    }, 2000);
+  }
+
+  // ---- 正解演出 ----
+  function revealPokemon(displayName) {
+    // シルエット解除
+    pokemonImage.classList.remove('silhouette', 'floating');
+    pokemonImage.classList.add('revealed', 'correct-reveal');
+
+    // 名前表示
+    pokemonName.textContent = displayName;
+    correctMsg.textContent  = '🎉 せいかい！';
+    correctMsg.style.color  = '#7de0a8';
+
+    // 星屑バースト
+    burstSparkles();
+
+    // 少し後にふわふわに戻す
+    setTimeout(function() {
+      pokemonImage.classList.remove('correct-reveal');
+      pokemonImage.classList.add('floating');
+    }, 600);
+
+    // 入力無効化
+    guessInput.disabled    = true;
+    guessButton.disabled   = true;
+    giveUpButton.disabled  = true;
+  }
+
+  // ---- あきらめる ----
+  function giveUp() {
+    pokemonImage.classList.remove('silhouette', 'floating');
+    pokemonImage.classList.add('revealed');
+    pokemonName.textContent = correctNames[0] || '';
+    correctMsg.textContent  = 'こたえは「' + (correctNames[0] || '') + '」だよ！';
+    correctMsg.style.color  = '#a8d4ff';
+    guessInput.disabled    = true;
+    guessButton.disabled   = true;
+    giveUpButton.disabled  = true;
+    setTimeout(function() { pokemonImage.classList.add('floating'); }, 100);
+  }
+
+  // ---- 答え合わせ ----
+  function checkGuess() {
+    let input = guessInput.value.trim();
+    if (!input) return;
+
+    // ひらがな→カタカナ変換して比較
+    let normalized = input.replace(/[ぁ-ゖ]/g, function(c) {
+      return String.fromCharCode(c.charCodeAt(0) + 0x60);
+    });
+
+    let isCorrect = correctNames.some(function(name) {
+      let normName = name.replace(/[ぁ-ゖ]/g, function(c) {
+        return String.fromCharCode(c.charCodeAt(0) + 0x60);
+      });
+      return normalized === normName;
+    });
+
+    if (isCorrect) {
+      wrongMsg.textContent = '';
+      revealPokemon(correctNames[0]);
+    } else {
+      wrongMsg.textContent = 'ちがうよ、もう一度！';
+      guessInput.value = '';
+      guessInput.focus();
+    }
+  }
+
+  // ---- ポケモン読み込み ----
+  function loadPokemon() {
+    let pokemonNumber = Math.floor(Math.random() * 898) + 1;
+
+    // リセット
+    correctNames = [];
+    pokemonName.textContent  = '？？？';
+    correctMsg.textContent   = '';
+    wrongMsg.textContent     = '';
+    guessInput.value         = '';
+    guessInput.disabled      = true;
+    guessButton.disabled     = true;
+    giveUpButton.disabled    = true;
+    pokemonImage.style.opacity = '0';
+    pokemonImage.className   = 'silhouette';
+    pokeball.style.display   = 'block';
+    pokeball.className       = '';
+    pokemonHeight.textContent  = '--';
+    pokemonWeight.textContent  = '--';
+    pokemonBaseStats.innerHTML = '';
+    pokemonFlavorText.textContent = '';
+
+    fetch('https://pokeapi.co/api/v2/pokemon/' + pokemonNumber)
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        // 画像先読み
+        let img = new Image();
+        img.onload = function() {
+          pokemonImage.src = img.src;
+          // opacity:0 の状態で先にシルエットを適用しておく（色が見えなくなる）
+          pokemonImage.classList.add('silhouette');
+          playPokeballAnimation(function() {
+            guessInput.disabled   = false;
+            guessButton.disabled  = false;
+            giveUpButton.disabled = false;
+            guessInput.focus();
+          });
+        };
+        img.src = data.sprites.front_default;
+
+        pokemonHeight.textContent = (data.height / 10).toFixed(1) + ' m';
+        pokemonWeight.textContent = (data.weight / 10).toFixed(1) + ' kg';
+
+        data.stats.forEach(function(s) {
+          let label = statNames[s.stat.name] || s.stat.name;
+          let value = s.base_stat;
+          let pct   = Math.min(value / 255 * 100, 100).toFixed(1);
+          let row   = document.createElement('div');
+          row.className = 'stat-bar-row';
+          row.innerHTML =
+            '<span class="stat-bar-label">' + label + '</span>' +
+            '<span class="stat-bar-value">' + value + '</span>' +
+            '<div class="stat-bar-track">' +
+              '<div class="stat-bar-fill" style="width:0%;background:' + statColor(value) + '"></div>' +
+            '</div>';
+          pokemonBaseStats.appendChild(row);
+          requestAnimationFrame(function() {
+            requestAnimationFrame(function() {
+              row.querySelector('.stat-bar-fill').style.width = pct + '%';
+            });
+          });
+        });
+
+        return fetch('https://pokeapi.co/api/v2/pokemon-species/' + pokemonNumber);
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(speciesData) {
+        // 正解名を複数登録（カタカナ・漢字まじり）
+        let hrkt = speciesData.names.find(function(n) { return n.language.name === 'ja-hrkt'; });
+        let ja   = speciesData.names.find(function(n) { return n.language.name === 'ja'; });
+        if (hrkt) correctNames.push(hrkt.name);
+        if (ja && ja.name !== (hrkt && hrkt.name)) correctNames.push(ja.name);
+
+        let jaFlavor = speciesData.flavor_text_entries.find(function(e) {
+          return e.language.name === 'ja';
+        });
+        if (jaFlavor) {
+          pokemonFlavorText.textContent = jaFlavor.flavor_text.replace(/[\f\n]/g, ' ');
+        }
+      })
+      .catch(function(error) {
+        console.error('エラーが発生しました:' + error);
+      });
+  }
+
+  guessButton.addEventListener('click', checkGuess);
+  guessInput.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') checkGuess();
+  });
+  giveUpButton.addEventListener('click', giveUp);
+  nextButton.addEventListener('click', loadPokemon);
+
+  loadPokemon();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <title>今日のカクテル</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background:
+        radial-gradient(ellipse at 30% 20%, rgba(80, 120, 220, 0.3) 0%, transparent 55%),
+        radial-gradient(ellipse at 70% 80%, rgba(140, 60, 200, 0.25) 0%, transparent 50%),
+        linear-gradient(160deg, #070d20 0%, #0d1535 50%, #130820 100%);
+      min-height: 100vh;
+      font-family: 'Hiragino Kaku Gothic ProN', 'Meiryo', sans-serif;
+      color: #e8eaf6;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow-x: hidden;
+      padding: 5rem 0 3rem;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        radial-gradient(1px 1px at 10% 15%, rgba(255,255,255,0.8) 0%, transparent 100%),
+        radial-gradient(1px 1px at 30% 8%,  rgba(255,255,255,0.6) 0%, transparent 100%),
+        radial-gradient(1.5px 1.5px at 55% 20%, rgba(255,255,255,0.9) 0%, transparent 100%),
+        radial-gradient(1px 1px at 78% 12%, rgba(255,255,255,0.5) 0%, transparent 100%),
+        radial-gradient(1px 1px at 90% 35%, rgba(255,255,255,0.7) 0%, transparent 100%),
+        radial-gradient(1px 1px at 20% 55%, rgba(255,255,255,0.6) 0%, transparent 100%),
+        radial-gradient(1.5px 1.5px at 65% 60%, rgba(255,255,255,0.8) 0%, transparent 100%),
+        radial-gradient(1px 1px at 45% 80%, rgba(255,255,255,0.5) 0%, transparent 100%),
+        radial-gradient(1px 1px at 85% 75%, rgba(200,200,255,0.7) 0%, transparent 100%),
+        radial-gradient(1px 1px at 5%  90%, rgba(255,255,255,0.6) 0%, transparent 100%);
+    }
+
+    header {
+      position: fixed;
+      top: 0; width: 100%;
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: linear-gradient(to bottom, rgba(6,11,24,0.95), transparent);
+      z-index: 10;
+    }
+
+    header .logo { font-size: 0.85rem; letter-spacing: 0.15em; color: #a5c4f3; }
+
+    header a {
+      color: #c5d8f5;
+      text-decoration: none;
+      font-size: 0.85rem;
+      letter-spacing: 0.1em;
+      transition: color 0.2s;
+    }
+    header a:hover { color: #fff; }
+
+    .card {
+      position: relative;
+      z-index: 1;
+      background: rgba(255, 255, 255, 0.06);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 24px;
+      padding: 3rem 2.5rem 2.5rem;
+      width: min(460px, 90vw);
+      text-align: center;
+      box-shadow: 0 8px 40px rgba(0, 0, 0, 0.4);
+    }
+
+    .eyecatch {
+      font-size: 0.72rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: #7baee8;
+      margin-bottom: 0.5rem;
+    }
+
+    h1 {
+      font-size: 1.6rem;
+      font-weight: bold;
+      letter-spacing: 0.1em;
+      background: linear-gradient(135deg, #e8f4ff 0%, #a8d4ff 40%, #c8a8ff 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 1.8rem;
+    }
+
+    /* カクテル画像 */
+    #cocktailImage {
+      width: 180px;
+      height: 180px;
+      object-fit: cover;
+      border-radius: 50%;
+      border: 2px solid rgba(160, 200, 255, 0.2);
+      box-shadow: 0 0 30px rgba(120, 160, 255, 0.25);
+      display: block;
+      margin: 0 auto;
+    }
+
+    #cocktailImage.loading {
+      background: rgba(255,255,255,0.05);
+      animation: shimmer 1.5s ease-in-out infinite;
+    }
+
+    @keyframes shimmer {
+      0%, 100% { opacity: 0.4; }
+      50%       { opacity: 0.8; }
+    }
+
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .fade-in { animation: fadeInUp 0.5s ease-out forwards; }
+
+    /* カクテル名 */
+    #cocktailName {
+      font-size: 1.8rem;
+      font-weight: bold;
+      letter-spacing: 0.08em;
+      background: linear-gradient(135deg, #e8f4ff 0%, #a8d4ff 40%, #c8a8ff 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-top: 1.2rem;
+      margin-bottom: 0;
+      min-height: 2rem;
+    }
+
+    #cocktailNameEn {
+      font-size: 0.78rem;
+      color: #4a6a88;
+      letter-spacing: 0.08em;
+      margin-top: 0.2rem;
+    }
+
+    #abvBadge {
+      display: inline-block;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: #ffd080;
+      background: rgba(255, 200, 80, 0.1);
+      border: 1px solid rgba(255, 200, 80, 0.3);
+      border-radius: 20px;
+      padding: 0.2rem 0.8rem;
+      margin-top: 0.5rem;
+    }
+
+    /* バッジ行 */
+    .badge-row {
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-top: 0.6rem;
+    }
+
+    .badge {
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      padding: 0.2rem 0.8rem;
+      border-radius: 20px;
+      border: 1px solid rgba(255,255,255,0.2);
+      background: rgba(255,255,255,0.08);
+      color: #c0d8f0;
+    }
+
+    .badge.alcoholic   { border-color: rgba(255,160,120,0.4); color: #ffb898; }
+    .badge.category    { border-color: rgba(160,200,255,0.3); color: #a8d4ff; }
+    .badge.glass       { border-color: rgba(180,160,255,0.3); color: #c8b8ff; }
+
+    /* 材料リスト */
+    .section-label {
+      font-size: 0.68rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: #5a80a8;
+      margin: 1.4rem 0 0.6rem;
+      text-align: left;
+    }
+
+    #ingredientList {
+      list-style: none;
+      text-align: left;
+      background: rgba(255,255,255,0.04);
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.08);
+      overflow: hidden;
+    }
+
+    #ingredientList li {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.5rem 1rem;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      font-size: 0.88rem;
+    }
+
+    #ingredientList li:last-child { border-bottom: none; }
+
+    .ingredient-name   { color: #c0d8f0; }
+    .ingredient-measure { color: #5a80a8; font-size: 0.78rem; }
+
+    /* 作り方 */
+    #instructions {
+      margin-top: 0.6rem;
+      font-size: 0.84rem;
+      color: #8aaccc;
+      line-height: 1.9;
+      text-align: left;
+      padding: 0.8rem 1rem;
+      background: rgba(255,255,255,0.04);
+      border-radius: 10px;
+      border-left: 2px solid rgba(160,200,255,0.3);
+      min-height: 3rem;
+    }
+
+    /* ボタン */
+    #nextButton {
+      margin-top: 1.8rem;
+      background: linear-gradient(135deg, #a8d4ff, #5588c8);
+      color: #070d20;
+      border: none;
+      border-radius: 10px;
+      padding: 0.6rem 2rem;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      letter-spacing: 0.05em;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+
+    #nextButton:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+    }
+
+    .back-link {
+      display: inline-block;
+      margin-top: 1.8rem;
+      font-size: 0.8rem;
+      color: #5588a0;
+      text-decoration: none;
+      letter-spacing: 0.1em;
+      border-bottom: 1px solid rgba(100, 150, 200, 0.3);
+      transition: color 0.2s;
+    }
+    .back-link:hover { color: #a8d4ff; }
+  </style>
+</head>
+<body>
+
+  <header>
+    <span class="logo">今日のカクテル</span>
+    <a href="index.html">← トップへ</a>
+  </header>
+
+  <div class="card">
+    <p class="eyecatch">Today's Cocktail</p>
+    <h1>今日のカクテル</h1>
+
+    <img id="cocktailImage" src="" alt="" class="loading">
+
+    <h1 id="cocktailName"></h1>
+    <p id="cocktailNameEn"></p>
+
+    <div class="badge-row" id="badgeRow"></div>
+    <div id="abvBadge" style="display:none;"></div>
+
+    <p class="section-label">材料</p>
+    <ul id="ingredientList"></ul>
+
+    <p class="section-label">作り方</p>
+    <p id="instructions"></p>
+
+    <button id="nextButton">別のカクテルを見る</button>
+    <br>
+    <a class="back-link" href="index.html">トップページへ戻る</a>
+  </div>
+
+<script>
+  let cocktailImage   = document.getElementById('cocktailImage');
+  let cocktailName    = document.getElementById('cocktailName');
+  let cocktailNameEn  = document.getElementById('cocktailNameEn');
+  let badgeRow        = document.getElementById('badgeRow');
+  let abvBadge        = document.getElementById('abvBadge');
+  let ingredientList  = document.getElementById('ingredientList');
+  let instructions    = document.getElementById('instructions');
+  let nextButton      = document.getElementById('nextButton');
+
+  function makeBadge(text, cls) {
+    let span = document.createElement('span');
+    span.className = 'badge ' + cls;
+    span.textContent = text;
+    return span;
+  }
+
+  // MyMemory APIで翻訳（|区切りでまとめて送れる）
+  function translate(text) {
+    return fetch(
+      'https://api.mymemory.translated.net/get?q=' +
+      encodeURIComponent(text) + '&langpair=en|ja'
+    ).then(function(r) { return r.json(); })
+     .then(function(t) { return t.responseData.translatedText || text; });
+  }
+
+  function loadCocktail() {
+    cocktailImage.className = 'loading';
+    cocktailImage.src = '';
+    cocktailName.textContent = '読み込み中...';
+    cocktailNameEn.textContent = '';
+    badgeRow.innerHTML = '';
+    abvBadge.style.display = 'none';
+    ingredientList.innerHTML = '';
+    instructions.textContent = '翻訳中...';
+
+    let drinkData;
+
+    fetch('https://www.thecocktaildb.com/api/json/v1/1/random.php')
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        drinkData = data.drinks[0];
+        let d = drinkData;
+
+        // 画像
+        let img = new Image();
+        img.onload = function() {
+          cocktailImage.src = img.src;
+          cocktailImage.className = 'fade-in';
+        };
+        img.src = d.strDrinkThumb;
+
+        // 英語名を小さく表示
+        cocktailNameEn.textContent = d.strDrink;
+
+        // バッジ
+        if (d.strCategory) badgeRow.appendChild(makeBadge(d.strCategory, 'category'));
+        if (d.strGlass)    badgeRow.appendChild(makeBadge(d.strGlass,    'glass'));
+
+        // アルコール度数バッジ
+        if (d.strAlcoholic) {
+          let alcoholicMap = { 'Alcoholic': 'アルコールあり', 'Non alcoholic': 'ノンアルコール', 'Optional alcohol': 'アルコール任意' };
+          abvBadge.textContent = alcoholicMap[d.strAlcoholic] || d.strAlcoholic;
+          abvBadge.style.display = 'inline-block';
+        }
+
+        // 材料を収集
+        let ingredients = [];
+        let measures    = [];
+        for (let i = 1; i <= 15; i++) {
+          let name    = d['strIngredient' + i];
+          let measure = d['strMeasure'    + i];
+          if (!name) break;
+          ingredients.push(name);
+          measures.push(measure ? measure.trim() : '');
+        }
+
+        // カクテル名・材料・レシピをまとめて翻訳（| 区切りで1リクエスト）
+        let nameAndIngredients = [d.strDrink].concat(ingredients).join(' | ');
+
+        return Promise.all([
+          translate(nameAndIngredients),
+          translate(d.strInstructions || '')
+        ]).then(function(results) {
+          let translated = results[0].split(' | ');
+          let jaName     = translated[0] || d.strDrink;
+          let jaIngredients = translated.slice(1);
+
+          // カクテル名（日本語）
+          cocktailName.textContent = jaName;
+          cocktailName.className = 'fade-in';
+
+          // 材料リスト
+          ingredients.forEach(function(name, idx) {
+            let li = document.createElement('li');
+            li.innerHTML =
+              '<span class="ingredient-name">'    + (jaIngredients[idx] || name) + '</span>' +
+              '<span class="ingredient-measure">' + measures[idx]                + '</span>';
+            ingredientList.appendChild(li);
+          });
+
+          // 作り方
+          instructions.textContent = results[1];
+          instructions.className = 'fade-in';
+        });
+      })
+      .catch(function(error) {
+        console.error('エラーが発生しました:' + error);
+      });
+  }
+
+  nextButton.addEventListener('click', loadCocktail);
+  loadCocktail();
+</script>
+
+</body>
+</html>
