@@ -851,83 +851,47 @@
     resize();
     window.addEventListener('resize', resize);
 
-    // 疑似乱数（シード固定）
-    function seededRand(seed) {
-      let s = seed;
-      return function() {
-        s = (s * 1664525 + 1013904223) & 0xffffffff;
-        return (s >>> 0) / 0xffffffff;
-      };
+    // 裂け目の制御点（右寄り）
+    const CRACK_X = 0.72;  // 裂け目の中心 X（画面幅の割合）
+
+    // 裂け目の輪郭をジグザグ + ベジェで生成
+    function buildCrack(w, h) {
+      const cx = w * CRACK_X;
+      const points = [];
+      const SEGS = 18;
+      for (let i = 0; i <= SEGS; i++) {
+        const t = i / SEGS;
+        const y = t * h;
+        const jitter = (Math.sin(i * 2.3) * 0.5 + Math.sin(i * 5.1) * 0.3) * w * 0.04;
+        points.push({ x: cx + jitter, y });
+      }
+      return points;
     }
 
-    let shards, cracks, fragments;
+    // ランダムな小枝（裂け目から分岐）
+    function buildBranches(crack, w, h) {
+      const branches = [];
+      for (let i = 2; i < crack.length - 2; i += 3) {
+        if (Math.abs(Math.sin(i * 7.3)) > 0.5) {
+          const dir = Math.sin(i * 3.1) > 0 ? 1 : -1;
+          const len = w * (0.04 + Math.abs(Math.sin(i * 2.7)) * 0.06);
+          branches.push({
+            x1: crack[i].x, y1: crack[i].y,
+            x2: crack[i].x + dir * len,
+            y2: crack[i].y + (Math.random() * 0.5 - 0.1) * h * 0.08,
+          });
+        }
+      }
+      return branches;
+    }
+
+    let crack, branches;
 
     function build() {
       const w = rc.width, h = rc.height;
-      const rand = seededRand(42);
-
-      // 破砕の中心
-      const cx = w * 0.72;
-      const cy = h * 0.50;
-
-      // ── 放射クラック（中心から伸びる亀裂） ──
-      const CRACK_COUNT = 11;
-      cracks = [];
-      for (let c = 0; c < CRACK_COUNT; c++) {
-        const baseAngle = (c / CRACK_COUNT) * Math.PI * 2 + rand() * 0.3;
-        const len       = (0.18 + rand() * 0.22) * Math.min(w, h);
-        const segs      = 6 + Math.floor(rand() * 4);
-        const pts       = [{ x: cx, y: cy }];
-        let px = cx, py = cy;
-        for (let s = 0; s < segs; s++) {
-          const ratio = (s + 1) / segs;
-          const jitter = (rand() - 0.5) * 0.35;
-          const angle  = baseAngle + jitter;
-          const segLen = len / segs * (0.7 + rand() * 0.6);
-          px += Math.cos(angle) * segLen;
-          py += Math.sin(angle) * segLen;
-          pts.push({ x: px, y: py });
-        }
-        cracks.push(pts);
-      }
-
-      // ── ガラス破片（クラックで囲まれた多角形） ──
-      shards = [];
-      const SHARD_COUNT = 18;
-      for (let i = 0; i < SHARD_COUNT; i++) {
-        const angle  = rand() * Math.PI * 2;
-        const radius = (0.05 + rand() * 0.18) * Math.min(w, h);
-        const bx     = cx + Math.cos(angle) * radius;
-        const by     = cy + Math.sin(angle) * radius;
-        const verts  = 3 + Math.floor(rand() * 3);
-        const pts    = [];
-        const baseA  = rand() * Math.PI * 2;
-        const size   = (0.025 + rand() * 0.055) * Math.min(w, h);
-        for (let v = 0; v < verts; v++) {
-          const a  = baseA + (v / verts) * Math.PI * 2 + (rand() - 0.5) * 0.8;
-          const r  = size * (0.6 + rand() * 0.8);
-          pts.push({ x: bx + Math.cos(a) * r, y: by + Math.sin(a) * r });
-        }
-        // 光の受け方（面の角度で変わるハイライト）
-        const tilt = rand();
-        shards.push({ pts, bx, by, tilt, dist: radius / (Math.min(w, h) * 0.25) });
-      }
-
-      // ── 飛び散った小破片 ──
-      fragments = [];
-      for (let i = 0; i < 28; i++) {
-        const angle = rand() * Math.PI * 2;
-        const dist  = (0.12 + rand() * 0.38) * Math.min(w, h);
-        fragments.push({
-          x:    cx + Math.cos(angle) * dist,
-          y:    cy + Math.sin(angle) * dist,
-          size: (0.004 + rand() * 0.012) * Math.min(w, h),
-          tilt: rand(),
-          seed: rand() * 10,
-        });
-      }
+      crack    = buildCrack(w, h);
+      branches = buildBranches(crack, w, h);
     }
-
     build();
     window.addEventListener('resize', build);
 
@@ -936,120 +900,74 @@
     function draw() {
       const w = rc.width, h = rc.height;
       rCtx.clearRect(0, 0, w, h);
-      t += 0.007;
+      t += 0.008;
 
-      const pulse = 0.7 + 0.3 * Math.sin(t * 1.0);
-      const cx = w * 0.72, cy = h * 0.50;
-
-      // ── 背景 ──
+      // 暗い星空背景
       const bg = rCtx.createLinearGradient(0, 0, w, 0);
-      bg.addColorStop(0,    'rgba(6,11,24,0)');
-      bg.addColorStop(0.40, 'rgba(6,11,24,0.55)');
-      bg.addColorStop(0.60, 'rgba(7,12,28,0.92)');
-      bg.addColorStop(1,    'rgba(8,13,30,1)');
+      bg.addColorStop(0,   'rgba(6,11,24,0)');
+      bg.addColorStop(0.45,'rgba(6,11,24,0.6)');
+      bg.addColorStop(0.65,'rgba(8,14,32,0.92)');
+      bg.addColorStop(1,   'rgba(10,16,38,1)');
       rCtx.fillStyle = bg;
       rCtx.fillRect(0, 0, w, h);
 
-      // ── 破砕穴：中心の開口部（内側を宇宙色に） ──
+      // 裂け目の内側の光（裂け目から漏れる別世界の光）
+      const cx = crack[Math.floor(crack.length / 2)].x;
+      const innerGlow = rCtx.createRadialGradient(cx, h * 0.5, 0, cx, h * 0.5, w * 0.28);
+      const pulse = 0.55 + 0.15 * Math.sin(t * 1.2);
+      innerGlow.addColorStop(0,   `rgba(140,200,255,${(pulse * 0.55).toFixed(2)})`);
+      innerGlow.addColorStop(0.35,`rgba(100,160,255,${(pulse * 0.30).toFixed(2)})`);
+      innerGlow.addColorStop(0.65,`rgba(80,120,220,${(pulse * 0.12).toFixed(2)})`);
+      innerGlow.addColorStop(1,   'rgba(60,90,180,0)');
+      rCtx.fillStyle = innerGlow;
+      rCtx.fillRect(0, 0, w, h);
+
+      // 裂け目の縁の輝き
       rCtx.save();
-      // 穴の輪郭：クラックの先端を結んだ多角形
+      rCtx.shadowBlur  = 18;
+      rCtx.shadowColor = `rgba(160,220,255,${(0.5 + 0.2 * Math.sin(t)).toFixed(2)})`;
+
+      // メインクラック
       rCtx.beginPath();
-      const holeR = Math.min(w, h) * 0.13;
-      rCtx.ellipse(cx, cy, holeR * 0.55, holeR * 0.85, 0.3, 0, Math.PI * 2);
-      rCtx.clip();
-      rCtx.fillStyle = 'rgb(2,4,14)';
-      rCtx.fillRect(0, 0, w, h);
-      // 内側の発光
-      const ig = rCtx.createRadialGradient(cx, cy, 0, cx, cy, holeR * 1.0);
-      ig.addColorStop(0,    `rgba(200,235,255,${(pulse * 0.95).toFixed(2)})`);
-      ig.addColorStop(0.25, `rgba(140,200,255,${(pulse * 0.80).toFixed(2)})`);
-      ig.addColorStop(0.55, `rgba(80,140,240,${(pulse * 0.50).toFixed(2)})`);
-      ig.addColorStop(1,    'rgba(30,60,180,0)');
-      rCtx.fillStyle = ig;
-      rCtx.fillRect(0, 0, w, h);
-      // 内側に見える星
-      for (let i = 0; i < 24; i++) {
-        const sx = cx + Math.sin(i * 3.3 + t * 0.2) * holeR * 0.42;
-        const sy = cy + Math.cos(i * 2.7 + t * 0.15) * holeR * 0.65;
-        const sa = (0.4 + 0.6 * Math.abs(Math.sin(i * 1.9 + t))) * pulse;
-        rCtx.beginPath();
-        rCtx.arc(sx, sy, 0.5 + Math.abs(Math.sin(i * 4.1)) * 0.8, 0, Math.PI * 2);
-        rCtx.fillStyle = `rgba(220,240,255,${sa.toFixed(2)})`;
-        rCtx.fill();
+      rCtx.moveTo(crack[0].x, crack[0].y);
+      for (let i = 1; i < crack.length; i++) {
+        const prev = crack[i - 1];
+        const curr = crack[i];
+        rCtx.quadraticCurveTo(
+          (prev.x + curr.x) / 2, (prev.y + curr.y) / 2,
+          curr.x, curr.y
+        );
       }
-      rCtx.restore();
+      const edgeAlpha = 0.7 + 0.2 * Math.sin(t * 0.9);
+      rCtx.strokeStyle = `rgba(200,235,255,${edgeAlpha.toFixed(2)})`;
+      rCtx.lineWidth   = 1.5;
+      rCtx.stroke();
 
-      // ── ガラス破片 ──
-      for (const s of shards) {
-        rCtx.save();
+      // 枝
+      for (const b of branches) {
         rCtx.beginPath();
-        rCtx.moveTo(s.pts[0].x, s.pts[0].y);
-        for (let i = 1; i < s.pts.length; i++) rCtx.lineTo(s.pts[i].x, s.pts[i].y);
-        rCtx.closePath();
-
-        // 破片の面：半透明ガラス（角度で色味が変わる）
-        const shimmer = 0.5 + 0.5 * Math.sin(t * 0.6 + s.tilt * 8);
-        const glassA  = 0.08 + shimmer * 0.14;
-        const highlightA = 0.15 + shimmer * 0.35;
-        // 面の塗り：内側の光を反射する青白
-        rCtx.fillStyle = `rgba(${160 + shimmer * 60 | 0},${210 + shimmer * 30 | 0},255,${glassA.toFixed(2)})`;
-        rCtx.fill();
-
-        // ガラスのエッジハイライト
-        rCtx.shadowBlur  = 6 + shimmer * 10;
-        rCtx.shadowColor = `rgba(180,225,255,${(pulse * 0.6).toFixed(2)})`;
-        rCtx.strokeStyle = `rgba(210,240,255,${highlightA.toFixed(2)})`;
+        rCtx.moveTo(b.x1, b.y1);
+        rCtx.lineTo(b.x2, b.y2);
+        rCtx.strokeStyle = `rgba(180,220,255,${(edgeAlpha * 0.6).toFixed(2)})`;
         rCtx.lineWidth   = 0.8;
         rCtx.stroke();
-        rCtx.restore();
-      }
-
-      // ── 小破片（飛び散ったかけら） ──
-      for (const f of fragments) {
-        rCtx.save();
-        rCtx.translate(f.x, f.y);
-        rCtx.rotate(f.tilt * Math.PI * 2 + t * 0.1);
-        const fa = 0.3 + 0.5 * Math.abs(Math.sin(f.seed + t * 0.5));
-        rCtx.shadowBlur  = 8;
-        rCtx.shadowColor = `rgba(160,220,255,${(fa * pulse).toFixed(2)})`;
-        // 三角の破片
-        rCtx.beginPath();
-        rCtx.moveTo(0, -f.size);
-        rCtx.lineTo(f.size * 0.8, f.size * 0.6);
-        rCtx.lineTo(-f.size * 0.8, f.size * 0.6);
-        rCtx.closePath();
-        rCtx.fillStyle   = `rgba(190,225,255,${(fa * 0.18).toFixed(2)})`;
-        rCtx.strokeStyle = `rgba(220,242,255,${(fa * pulse).toFixed(2)})`;
-        rCtx.lineWidth   = 0.7;
-        rCtx.fill();
-        rCtx.stroke();
-        rCtx.restore();
-      }
-
-      // ── 放射クラック ──
-      rCtx.save();
-      rCtx.shadowBlur  = 14;
-      rCtx.shadowColor = `rgba(150,215,255,${(pulse * 0.7).toFixed(2)})`;
-      for (const pts of cracks) {
-        rCtx.beginPath();
-        rCtx.moveTo(pts[0].x, pts[0].y);
-        for (let i = 1; i < pts.length; i++) rCtx.lineTo(pts[i].x, pts[i].y);
-        const dist01 = Math.hypot(pts[pts.length - 1].x - cx, pts[pts.length - 1].y - cy) / (Math.min(w, h) * 0.4);
-        const alpha  = (0.55 + 0.25 * Math.sin(t * 0.7)) * (1 - dist01 * 0.5);
-        rCtx.strokeStyle = `rgba(210,240,255,${alpha.toFixed(2)})`;
-        rCtx.lineWidth   = 1.0;
-        rCtx.stroke();
       }
       rCtx.restore();
 
-      // ── 外に漏れる光 ──
+      // 裂け目の周囲に星を散らす
       rCtx.save();
-      const og = rCtx.createRadialGradient(cx, cy, 0, cx, cy, w * 0.32);
-      og.addColorStop(0,   `rgba(100,170,255,${(pulse * 0.15).toFixed(2)})`);
-      og.addColorStop(0.5, `rgba(60,120,220,${(pulse * 0.06).toFixed(2)})`);
-      og.addColorStop(1,   'rgba(40,80,180,0)');
-      rCtx.fillStyle = og;
-      rCtx.fillRect(0, 0, w, h);
+      for (let i = 0; i < crack.length; i++) {
+        const flicker = Math.sin(t * 2.3 + i * 1.7);
+        if (flicker > 0.5) {
+          const sx = crack[i].x + (Math.sin(i * 4.1 + t) * w * 0.06);
+          const sy = crack[i].y + (Math.cos(i * 3.7 + t) * h * 0.04);
+          const sr = 0.5 + flicker * 1.0;
+          rCtx.beginPath();
+          rCtx.arc(sx, sy, sr, 0, Math.PI * 2);
+          rCtx.fillStyle = `rgba(200,230,255,${(flicker * 0.7).toFixed(2)})`;
+          rCtx.fill();
+        }
+      }
       rCtx.restore();
 
       requestAnimationFrame(draw);
